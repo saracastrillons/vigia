@@ -1,0 +1,29 @@
+[
+  {
+    "id": "nexus",
+    "name": "NEXUS",
+    "url": "https://github.com/saracastrillons/nexus",
+    "desc": "Inteligencia global · React + FastAPI",
+    "slow_ms": 2000
+  },
+  {
+    "id": "synapse",
+    "name": "SYNAPSE",
+    "url": "https://github.com/saracastrillons/synapse",
+    "desc": "Gemelo digital · R3F + PostGIS",
+    "slow_ms": 2000
+  },
+  {
+    "id": "lifeos",
+    "name": "LIFEOS",
+    "url": "https://github.com/saracastrillons/lifeos",
+    "desc": "Sistema operativo personal · ML",
+    "slow_ms": 2000
+  },
+  {
+    "id": "vigia",
+    "name": "VIGÍA",
+    "url": "{self}/healthz",
+    "desc": "Autodiagnóstico · /healthz"
+  }
+]

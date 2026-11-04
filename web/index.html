@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VIGÍA · Monitoreo de sistemas</title>
+<meta name="description" content="VIGÍA: monitoreo autoalojado de servicios con un robot 3D que reacciona al estado real de tus sistemas.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 27'%3E%3Crect width='27' height='27' rx='6' fill='%23efece6'/%3E%3Cpath d='M23.5 8.5V8A4.5 4.5 0 0 0 19 3.5H8A4.5 4.5 0 0 0 3.5 8v11A4.5 4.5 0 0 0 8 23.5h11a4.5 4.5 0 0 0 4.5-4.5v-.5' fill='none' stroke='%2320c3ff' stroke-width='2.4'/%3E%3Ccircle cx='10.5' cy='13.5' r='1.8' fill='%23141414'/%3E%3Ccircle cx='16' cy='13' r='1.8' fill='%23141414'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Schibsted+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+@property --g1{syntax:'<color>';inherits:true;initial-value:#9be15d}
+@property --g2{syntax:'<color>';inherits:true;initial-value:#2ee6a6}
+@property --g3{syntax:'<color>';inherits:true;initial-value:#20c3ff}
+@property --g4{syntax:'<color>';inherits:true;initial-value:#4f7cff}
+:root{
+  --bg:#efece6;--ink:#141414;--dim:rgba(20,20,20,.5);--faint:rgba(20,20,20,.14);
+  --line:rgba(20,20,20,.09);--hair:rgba(20,20,20,.18);--paper:rgba(239,236,230,.88);
+  --col:17%;
+  --ok:#0fa968;--warn:#e8890c;--down:#e5383b;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --sans:'Schibsted Grotesk',system-ui,sans-serif;
+  --grad:conic-gradient(from 200deg,var(--g1),var(--g2) 18%,var(--g3) 34%,var(--g4) 50%,var(--g3) 66%,var(--g2) 82%,var(--g1));
+  --lgrad:linear-gradient(90deg,var(--g2),var(--g3),var(--g4));
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  transition:--g1 .9s,--g2 .9s,--g3 .9s,--g4 .9s}
+body.st-degraded{--g1:#ffe08a;--g2:#ffd166;--g3:#ffb347;--g4:#ff8a3d}
+body.st-down{--g1:#ff9a8a;--g2:#ff5a5f;--g3:#ff3d5a;--g4:#c0142f}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+ul{list-style:none}
+.mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+::selection{background:var(--ink);color:var(--bg)}
+
+/* ---------- fixed chrome ---------- */
+.guides{position:fixed;inset:0;z-index:0;pointer-events:none}
+.guides i{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.guides i:nth-child(1){left:var(--col)}
+.guides i:nth-child(2){left:50%}
+.guides i:nth-child(3){left:calc(100% - var(--col))}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
+#gl.on{opacity:1}
+
+.topbar{position:fixed;top:0;left:0;right:0;height:30px;z-index:40;background:var(--ink);color:#efece6;
+  display:flex;align-items:center;justify-content:center;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;
+  transition:transform .5s cubic-bezier(.6,0,.2,1)}
+.topbar b{font-weight:500;background:var(--lgrad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.topbar .x{position:absolute;right:10px;top:0;width:30px;height:30px;color:#efece6;font-size:15px}
+.topbar .x:hover{opacity:.6}
+body.tb-off .topbar{transform:translateY(-100%)}
+
+nav{position:fixed;top:30px;left:0;right:0;height:52px;z-index:35;display:grid;grid-template-columns:17% 1fr 12% 17%;
+  background:rgba(239,236,230,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--hair);
+  transition:top .5s cubic-bezier(.6,0,.2,1)}
+body.tb-off nav{top:0}
+.logo{display:flex;align-items:center;gap:10px;padding-left:22px;font:500 18px var(--sans);letter-spacing:.02em}
+.logo svg{width:27px;height:27px;flex:none}
+.menu{display:flex;align-items:center;gap:30px;padding-left:30px;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.menu a{transition:opacity .2s}
+.menu a:hover{opacity:.5}
+.pad{display:flex;align-items:center;justify-content:center;gap:9px;border-left:1px solid var(--hair);border-right:1px solid var(--hair);
+  font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 22%,transparent);transition:background .4s,box-shadow .4s}
+.dot.degraded{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 25%,transparent)}
+.dot.down{background:var(--down);box-shadow:0 0 0 3px color-mix(in srgb,var(--down) 25%,transparent);animation:throb 1s ease-in-out infinite}
+.dot.unknown{background:var(--faint);box-shadow:none}
+@keyframes throb{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--down) 10%,transparent)}}
+.cta-cell{display:flex;align-items:center;justify-content:center}
+.cta{position:relative;height:30px;padding:0 16px;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--hair);
+  font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;transition:background .25s,color .25s}
+.cta::before{content:'';position:absolute;inset:-1px;background:var(--grad);pointer-events:none;
+  clip-path:polygon(0 0,58% 0,58% 2px,2px 2px,2px 100%,0 100%)}
+.cta:hover{background:var(--ink);color:var(--bg)}
+.cta .ey{letter-spacing:-.12em;margin-right:2px}
+
+.rail{position:fixed;right:3.4%;top:50%;transform:translateY(-50%);height:270px;width:150px;z-index:30;pointer-events:none}
+.rail .dots{position:absolute;right:0;top:0;bottom:34px;display:flex;flex-direction:column;justify-content:space-between}
+.rail .dots i{width:3px;height:3px;border-radius:50%;background:var(--ink);opacity:.35}
+.rail .tag{position:absolute;right:14px;top:0;display:flex;align-items:center;gap:7px;font:500 10.5px var(--mono);letter-spacing:.06em;
+  transition:top .7s cubic-bezier(.6,0,.2,1);background:var(--bg);padding:3px 6px;border:1px solid var(--hair)}
+.rail .tag svg{width:12px;height:12px}
+.rail .tag svg .hand{transform-origin:6px 6px;transition:transform .7s cubic-bezier(.6,0,.2,1)}
+.rail .rmenu{position:absolute;right:0;bottom:0;font:400 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;pointer-events:auto}
+.rail .rpop{position:absolute;right:0;bottom:24px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:auto;
+  opacity:0;transform:translateY(6px);visibility:hidden;transition:.3s}
+.rail .rpop.open{opacity:1;transform:none;visibility:visible}
+.rail .rpop a{font:400 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--bg);padding:3px 6px;border:1px solid var(--hair)}
+.rail .rpop a:hover{background:var(--ink);color:var(--bg)}
+
+.toasts{position:fixed;top:98px;right:calc(var(--col) + 18px);z-index:34;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg);border:1px solid var(--ink);
+  font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;animation:tin .5s cubic-bezier(.2,.7,.2,1) both}
+.toast.bye{animation:tout .4s ease forwards}
+@keyframes tin{from{opacity:0;transform:translateY(-10px)}}
+@keyframes tout{to{opacity:0;transform:translateY(-6px)}}
+
+/* ---------- shared ---------- */
+main{position:relative;z-index:2}
+section{position:relative;height:100vh;min-height:640px}
+.cn{position:absolute;width:7px;height:7px;border:0 solid var(--ink);pointer-events:none}
+.cn.tl{left:-5px;top:-5px;border-width:1px 0 0 1px;border-top-left-radius:3px}
+.cn.tr{right:-5px;top:-5px;border-width:1px 1px 0 0;border-top-right-radius:3px}
+.cn.bl{left:-5px;bottom:-5px;border-width:0 0 1px 1px;border-bottom-left-radius:3px}
+.cn.br{right:-5px;bottom:-5px;border-width:0 1px 1px 0;border-bottom-right-radius:3px}
+.frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.rv{opacity:0;transform:translateY(26px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+.in .rv{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+.swap{transition:opacity .45s ease,transform .45s ease}
+.swap.out{opacity:0;transform:translateY(10px)}
+h2{font-weight:400;letter-spacing:-.02em}
+
+/* ---------- 1 · intro ---------- */
+.prompt{position:absolute;left:var(--col);top:30%;width:24.4%}
+.prompt .tab{width:42px;height:42px;border:1px solid var(--ink);border-bottom:0;display:grid;place-items:center;font:500 14px var(--mono);background:var(--bg)}
+.prompt .box{position:relative;border:1px solid var(--ink);padding:14px 16px 13px;min-height:92px;font:400 11px/1.45 var(--mono);background:rgba(239,236,230,.6)}
+.prompt .ps{color:var(--dim)}
+.prompt .out{margin-top:8px;color:var(--ok);min-height:16px;transition:opacity .2s}
+.prompt .out.err{color:var(--down)}
+.caret{display:inline-block;width:6px;height:11px;background:var(--ink);vertical-align:-1px;margin-left:2px;animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.prompt .next{margin-top:10px;font:400 11px/1.45 var(--mono);color:rgba(20,20,20,.26);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rule-a{position:absolute;top:calc(30% + 42px);left:calc(var(--col) + 24.4%);right:var(--col);height:1px;background:var(--hair)}
+.features{position:absolute;right:var(--col);top:calc(30% + 43px);width:23%;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.features li{display:grid;grid-template-columns:18% 16px 1fr;align-items:center;height:21px;border-bottom:1px solid var(--hair)}
+.features li::before{content:''}
+.features li i{width:4px;height:4px;border-radius:50%;background:var(--ink)}
+.features li.dimmed{color:var(--dim)}
+.features li.dimmed i{background:var(--dim)}
+.hero{position:absolute;left:var(--col);bottom:9%}
+.hero .kick{font:400 12px var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.hero h1{font:400 clamp(42px,5.25vw,92px)/1 var(--sans);letter-spacing:-.025em}
+.hero h1 span{position:relative;display:block;width:max-content;padding:.07em .2em .13em}
+.hero h1 span+span{margin-top:-2px}
+.sub{position:absolute;left:calc(62% + 18px);bottom:3.6%;max-width:20%;font-size:14.5px;line-height:1.4}
+.scroll{position:absolute;right:var(--col);bottom:calc(14% + 18px);display:flex;align-items:center;gap:14px;font-size:11px}
+.scroll .ab{position:relative;width:30px;height:30px;display:grid;place-items:center}
+.scroll .ab span{animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(4px)}}
+.rule-b{position:absolute;left:50%;right:0;bottom:14%;height:1px;background:var(--hair)}
+
+/* ---------- 2 · producto ---------- */
+.tabs{position:absolute;left:var(--col);right:0;top:calc(82px + 7vh);height:74px;overflow:hidden;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.track{display:flex;height:100%;transition:transform .9s cubic-bezier(.65,0,.2,1)}
+.tabx{position:relative;flex:0 0 33vw;display:grid;grid-template-columns:68px 1fr;align-items:center;color:var(--faint);transition:color .6s,opacity .6s}
+.tabx .n{height:100%;display:grid;place-items:center;border-right:1px solid var(--hair);font:400 11px var(--mono)}
+.tabx .l{padding:0 22px;font:400 clamp(16px,1.45vw,24px)/1.1 var(--sans);letter-spacing:-.01em}
+.tabx .fr{position:absolute;inset:12px 14px 12px 6px;border:1px solid var(--ink);opacity:0;transition:opacity .5s}
+.tabx.on{color:var(--ink)}
+.tabx.on .fr{opacity:1}
+.tabx.past{opacity:0}
+.tdesc{position:absolute;left:var(--col);top:calc(82px + 7vh + 74px + 30px);width:25%;padding-left:16px;border-left:1px solid var(--ink);
+  font:400 13.5px/1.5 var(--sans);transition:opacity .35s}
+.tdesc.out{opacity:0}
+.specs{position:absolute;right:var(--col);top:calc(82px + 7vh + 74px + 30px);width:23%;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.specs div{display:flex;justify-content:space-between;height:23px;align-items:center;border-bottom:1px solid var(--hair)}
+.specs div:first-child{border-top:1px solid var(--hair)}
+.specs dt{color:var(--dim)}
+.gate{position:absolute;left:var(--col);bottom:9%}
+.gate .dd{font:500 14px var(--mono);letter-spacing:.1em;margin-bottom:10px}
+.gate h2{font-size:clamp(30px,3.05vw,54px);line-height:1.08}
+.gate h2 span{display:block;width:max-content;padding:0 .3em .06em}
+.gate h2 .pill{border:1px solid var(--ink);border-radius:16px}
+
+/* ---------- 3 · arquitectura ---------- */
+.arch{position:absolute;left:var(--col);top:calc(82px + 5vh);bottom:5vh;width:43%;display:flex;flex-direction:column;gap:2.2vh}
+.arch .lab{font-size:11px;display:flex;gap:10px;align-items:center}
+.arch .lab::before{content:'';width:18px;height:1px;background:var(--ink)}
+.arch h2{font-size:clamp(30px,3.05vw,54px);line-height:1.02}
+.arch h2 em{font-style:normal;color:var(--dim)}
+.arch .lead{font-size:14px;line-height:1.5;max-width:54ch}
+.diagram{flex:1;min-height:0;display:flex}
+.diagram svg{width:100%;height:100%;max-height:44vh;overflow:visible}
+.diagram .nd rect{fill:rgba(239,236,230,.94);stroke:var(--ink);stroke-width:1;transition:stroke .3s,stroke-width .3s}
+.diagram .nd.hit rect{stroke:var(--g3);stroke-width:2.5}
+.diagram .nd .t{font:500 14px var(--sans);fill:var(--ink)}
+.diagram .nd .s{font:400 9.5px var(--mono);letter-spacing:.05em;fill:var(--dim);text-transform:uppercase}
+.diagram .ed{fill:none;stroke:var(--ink);stroke-width:1;opacity:.55}
+.diagram .ed.dash{stroke-dasharray:4 4}
+.diagram .pk{fill:var(--g3)}
+.diagram .el{font:400 9px var(--mono);letter-spacing:.05em;fill:var(--dim)}
+.log{font:400 10.5px var(--mono);text-transform:uppercase;letter-spacing:.04em;border-top:1px solid var(--hair);height:calc(6 * 21px + 1px);overflow:hidden}
+.log .ln{display:grid;grid-template-columns:74px 1fr 46px 70px 96px;align-items:center;height:21px;border-bottom:1px solid var(--hair);animation:lin .5s cubic-bezier(.2,.7,.2,1)}
+.log .ln span:first-child{color:var(--dim)}
+@keyframes lin{from{opacity:0;transform:translateY(-8px)}}
+.st{font-weight:500}
+.st.up{color:var(--ok)}.st.degraded{color:var(--warn)}.st.down{color:var(--down)}.st.unknown{color:var(--dim)}
+
+/* ---------- 4 · en vivo ---------- */
+.hdr{position:absolute;left:var(--col);right:var(--col);top:calc(82px + 5vh);height:60px;border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:16px}
+.hdr .k{font-size:11px}
+.hdr .brk{position:relative;font-size:11px;padding:3px 7px}
+.hdr .brk::before,.hdr .brk::after{content:'';position:absolute;top:0;bottom:0;width:4px;border:1px solid var(--ink)}
+.hdr .brk::before{left:0;border-right:0}.hdr .brk::after{right:0;border-left:0}
+.av{position:relative;width:56px;height:56px;display:grid;place-items:center;background:var(--ink);color:var(--bg);font:500 24px var(--sans);flex:none;overflow:hidden}
+.av::after{content:'';position:absolute;right:0;bottom:0;width:16px;height:16px;background:var(--grad)}
+.hdr .nm{display:flex;align-items:center;gap:10px;font:500 19px var(--sans)}
+.hdr .role{font-size:11px;color:var(--dim);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr .mode{margin-left:auto;font-size:10.5px;padding:5px 9px;border:1px solid var(--hair);display:flex;gap:8px;align-items:center;white-space:nowrap}
+.hdr .mode .dot{width:6px;height:6px}
+.panel{position:absolute;left:var(--col);top:calc(82px + 5vh + 60px + 5vh);width:max(310px,25vw)}
+.pill2{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:5px 10px;border:1px solid var(--ink)}
+.upt{font:400 clamp(46px,5.4vw,96px)/1 var(--sans);letter-spacing:-.04em;margin-top:16px}
+.upt small{font-size:.45em;letter-spacing:0;margin-left:2px}
+.uptl{font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--dim);margin-top:8px}
+.kv{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;border-top:1px solid var(--hair)}
+.kv div{display:flex;justify-content:space-between;padding:0 12px 0 0;height:26px;align-items:center;border-bottom:1px solid var(--hair);font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.kv div:nth-child(even){padding:0 0 0 12px;border-left:1px solid var(--hair)}
+.kv dt{color:var(--dim)}
+.kv dd{font-variant-numeric:tabular-nums}
+#spark{display:block;width:100%;height:72px;margin-top:14px}
+.try{margin-top:18px;padding-left:14px;border-left:1px solid var(--ink)}
+.try button{font:400 15px var(--sans);text-align:left}
+.try button span{color:var(--dim);text-decoration:underline;text-underline-offset:3px}
+.try button:hover span{color:var(--ink)}
+.try small{display:block;margin-top:6px;font-size:10px;color:var(--dim);min-height:14px}
+.arrows{position:absolute;left:var(--col);bottom:7%;display:flex;align-items:center;gap:8px}
+.arrows button{width:44px;height:44px;border:1px solid var(--ink);font-size:16px;background:var(--bg);transition:background .2s,color .2s}
+.arrows button:hover{background:var(--ink);color:var(--bg)}
+.arrows .cnt{font-size:11px;margin-left:12px}
+.ghost{position:absolute;left:calc(100% - var(--col) + 26px);right:24px;bottom:7%;color:var(--ink);opacity:.1;pointer-events:none}
+.ghost.out{opacity:0}
+.ghost b{display:block;font:400 clamp(26px,2.6vw,46px)/1 var(--sans);letter-spacing:-.02em}
+.ghost span{display:block;margin-top:14px;font:400 clamp(26px,2.6vw,46px)/1 var(--sans);letter-spacing:-.03em}
+
+footer{position:relative;z-index:2;height:30vh;display:grid;place-items:center;border-top:1px solid var(--hair);background:var(--bg)}
+footer .mono{font-size:11px;text-align:center;line-height:2}
+footer a{border-bottom:1px solid var(--hair)}
+
+/* ---------- mobile ---------- */
+@media (max-width:900px){
+  :root{--col:16px}
+  .guides i:nth-child(1),.guides i:nth-child(3),.menu,.pad,.rail,.features,.ghost,.specs,.rule-a{display:none}
+  nav{grid-template-columns:1fr auto}
+  .cta-cell{padding-right:16px}
+  .topbar a{max-width:100%;padding:0 44px 0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .logo{padding-left:16px}
+  .toasts{right:16px;left:16px;align-items:stretch}
+  .prompt{left:16px;right:16px;width:auto;top:18%}
+  .hero{left:16px;bottom:13%}
+  .hero h1 span,.hero .kick,.sub,.gate h2 span,.gate .dd,.tdesc,.panel,.arch,.hdr{background:var(--paper)}
+  .hero .kick{display:inline-block;padding:2px 4px}
+  .sub{left:16px;right:16px;max-width:none;bottom:3.6%;padding:4px 6px}
+  .scroll{right:16px;bottom:calc(14% + 10px)}
+  .scroll .lbl{display:none}
+  .tabs{left:16px}
+  .tabx{flex-basis:78vw}
+  .tdesc{width:auto;right:16px;padding:8px 12px}
+  .gate{left:16px}
+  .arch{width:auto;right:16px;padding:12px;top:calc(82px + 2vh);bottom:3vh}
+  .arch .lead{display:none}
+  .log .ln{grid-template-columns:66px 1fr 38px 62px 82px}
+  .hdr{left:16px;right:16px;gap:10px;padding:0 6px}
+  .hdr .k,.hdr .brk,.hdr .role{display:none}
+  .av{width:44px;height:44px;font-size:19px}
+  .panel{left:16px;right:16px;width:auto;padding:12px}
+  .arrows{left:16px;bottom:4%}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{transition:none;opacity:1;transform:none}
+  .scroll .ab span,.caret{animation:none}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div class="guides" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<div class="topbar">
+  <a href="#arquitectura"><b>Nuevo:</b> VIGÍA v1 ya está aquí · monitoreo autoalojado para tus servicios ↗</a>
+  <button class="x" aria-label="Cerrar aviso">×</button>
+</div>
+
+<nav>
+  <a class="logo" href="#intro" aria-label="VIGÍA, inicio">
+    <svg viewBox="0 0 27 27" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--g2)"/><stop offset=".5" style="stop-color:var(--g3)"/><stop offset="1" style="stop-color:var(--g4)"/></linearGradient></defs>
+      <path d="M23.5 8.5V8A4.5 4.5 0 0 0 19 3.5H8A4.5 4.5 0 0 0 3.5 8v11A4.5 4.5 0 0 0 8 23.5h11a4.5 4.5 0 0 0 4.5-4.5v-.5" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="10.5" cy="13.5" r="1.7" fill="#141414"/><circle cx="16" cy="13" r="1.7" fill="#141414"/>
+    </svg>
+    <span>VIGÍA</span>
+  </a>
+  <div class="menu">
+    <a href="#producto">Producto</a>
+    <a href="#arquitectura">Arquitectura</a>
+    <a href="#vivo">En vivo</a>
+    <a href="https://github.com/saracastrillons" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+  <div class="pad"><i class="dot unknown" id="navDot"></i><span id="navChip">Conectando…</span></div>
+  <div class="cta-cell"><a class="cta" href="#vivo"><span class="ey">••</span>Abrir consola</a></div>
+</nav>
+
+<aside class="rail" aria-label="Secciones">
+  <div class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="tag" id="railTag">
+    <svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="#141414"/><line class="hand" x1="6" y1="6" x2="6" y2="2.4" stroke="#141414" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <span id="railLbl">INTRO</span>
+  </div>
+  <button class="rmenu" id="railMenu" aria-expanded="false">≡ Menu</button>
+  <div class="rpop" id="railPop">
+    <a href="#intro">Intro</a><a href="#producto">Producto</a><a href="#arquitectura">Arquitectura</a><a href="#vivo">En vivo</a>
+  </div>
+</aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<main>
+  <!-- 1 · INTRO -->
+  <section id="intro" data-label="INTRO">
+    <div class="prompt rv d1">
+      <div class="tab" aria-hidden="true">&gt;_</div>
+      <div class="box">
+        <i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>
+        <span class="ps">~/vigia ❯</span> <span id="typed"></span><i class="caret"></i>
+        <div class="out" id="out"></div>
+      </div>
+      <div class="next" id="next"></div>
+    </div>
+    <div class="rule-a rv d2"></div>
+    <ul class="features rv d2">
+      <li><i></i>Health checks HTTP</li>
+      <li><i></i>Latencia p50 / p95</li>
+      <li><i></i>Regla 2 de 3</li>
+      <li class="dimmed"><i></i>Y mucho más</li>
+    </ul>
+    <div class="hero rv d3">
+      <div class="kick">Monitoreo de sistemas que está</div>
+      <h1><span id="h1a">Siempre</span><span id="h1b">Vigilando</span></h1>
+    </div>
+    <p class="sub rv d4">Vigila tus servicios, mide su latencia y te avisa antes de que tus usuarios lo noten.</p>
+    <a class="scroll mono rv d4" href="#producto"><span class="lbl">Scroll</span><span class="ab"><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i><span>↓</span></span></a>
+    <div class="rule-b"></div>
+  </section>
+
+  <!-- 2 · PRODUCTO -->
+  <section id="producto" data-label="PRODUCTO">
+    <div class="tabs rv d1"><div class="track" id="track"></div></div>
+    <p class="tdesc rv d2" id="tdesc"></p>
+    <dl class="specs rv d2" id="specs"></dl>
+    <div class="gate rv d3">
+      <div class="dd">··</div>
+      <h2><span class="pill">Cada servicio,</span><span>bajo la lupa</span></h2>
+    </div>
+  </section>
+
+  <!-- 3 · ARQUITECTURA -->
+  <section id="arquitectura" data-label="ARQUITECTURA">
+    <div class="arch">
+      <div class="lab mono rv d1">Arquitectura · v1</div>
+      <h2 class="rv d1">Cómo funciona <em>por dentro</em></h2>
+      <p class="lead rv d2">Un scheduler asíncrono lanza chequeos concurrentes; cada resultado se guarda como serie de tiempo y un evaluador decide el estado con la regla 2 de 3. Los cambios viajan por WebSocket hasta el robot.</p>
+      <div class="diagram rv d2"><svg id="diag" role="img" aria-label="Diagrama de arquitectura de VIGÍA"></svg></div>
+      <div class="log rv d3" id="log" aria-label="Últimos chequeos"></div>
+    </div>
+  </section>
+
+  <!-- 4 · EN VIVO -->
+  <section id="vivo" data-label="EN VIVO">
+    <div class="hdr rv d1">
+      <span class="k mono">Srv</span><span class="brk mono" id="srvNo">01</span>
+      <div class="av swap" id="av">N</div>
+      <span class="nm swap" id="nm"><i class="dot unknown" id="nmDot"></i><span id="srvName">—</span></span>
+      <span class="role mono swap" id="srvRole"></span>
+      <span class="mode mono" id="mode"><i class="dot unknown"></i><span>Conectando</span></span>
+    </div>
+    <div class="panel rv d2">
+      <div class="swap" id="pbody">
+        <span class="pill2" id="pill"><i class="dot unknown"></i><span>Sin datos</span></span>
+        <div class="upt" id="upt">—</div>
+        <div class="uptl" id="uptl">Uptime</div>
+        <dl class="kv">
+          <div><dt>p50</dt><dd id="p50">—</dd></div>
+          <div><dt>p95</dt><dd id="p95">—</dd></div>
+          <div><dt>Último</dt><dd id="lastMs">—</dd></div>
+          <div><dt>Hace</dt><dd id="ago">—</dd></div>
+        </dl>
+        <canvas id="spark" aria-label="Latencia de los últimos chequeos"></canvas>
+      </div>
+      <div class="try">
+        <button id="simBtn">Simular incidente <span>(Click aquí)</span></button>
+        <small class="mono" id="simNote"></small>
+      </div>
+    </div>
+    <div class="arrows rv d3">
+      <button id="prev" aria-label="Servicio anterior">←</button>
+      <button id="nxt" aria-label="Servicio siguiente">→</button>
+      <span class="cnt mono" id="cnt">01 / 04</span>
+    </div>
+    <div class="ghost swap" id="ghost" aria-hidden="true"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="mono">VIGÍA · 2026<br><span style="color:var(--dim)">Diseñado y construido por Sara Castrillón</span></div>
+</footer>
+
+<!-- ====================== UI + datos ====================== -->
+<script type="module">
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const pad2 = n => String(n).padStart(2, '0');
+const NS = 'http://www.w3.org/2000/svg';
+
+// Estado compartido con el módulo del robot
+const V = window.vigia = { status: 'unknown', sections: $$('main section') };
+
+/* ---------- chrome ---------- */
+let tbClosed = false;
+$('.topbar .x').onclick = () => { tbClosed = true; document.body.classList.add('tb-off'); };
+addEventListener('scroll', () => document.body.classList.toggle('tb-off', tbClosed || scrollY > 40), { passive: true });
+
+const reveal = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('in'); reveal.unobserve(e.target); }
+}), { threshold: .15 });
+V.sections.forEach(s => reveal.observe(s));
+
+const RAIL = { 'INTRO': [0, 0], 'PRODUCTO': [22, 90], 'ARQUITECTURA': [44, 180], 'EN VIVO': [66, 270] };
+const railTag = $('#railTag'), railLbl = $('#railLbl');
+const spy = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting || e.intersectionRatio < .5) return;
+  const lbl = e.target.dataset.label, [pos, deg] = RAIL[lbl];
+  railTag.style.top = pos + '%';
+  $('.hand', railTag).style.transform = `rotate(${deg}deg)`;
+  railLbl.textContent = lbl;
+}), { threshold: [.5] });
+V.sections.forEach(s => spy.observe(s));
+$('#railMenu').onclick = e => {
+  const open = $('#railPop').classList.toggle('open');
+  e.currentTarget.setAttribute('aria-expanded', open);
+};
+$$('#railPop a').forEach(a => a.addEventListener('click', () => $('#railPop').classList.remove('open')));
+
+/* ---------- marcos con degradado ---------- */
+function frame(el, stops, cut = false) {
+  el.style.position = 'relative';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.classList.add('frame');
+  svg.setAttribute('aria-hidden', 'true');
+  el.appendChild(svg);
+  const id = 'fg' + Math.random().toString(36).slice(2, 8);
+  const draw = () => {
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    const c = cut ? Math.min(h * .34, 28) : 0;
+    const d = c ? `M1 1H${w - 1}V${h - 1 - c}L${w - 1 - c} ${h - 1}H1Z` : `M1 1H${w - 1}V${h - 1}H1Z`;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.innerHTML = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2=".3">${
+      stops.map((s, i) => `<stop offset="${i / (stops.length - 1)}" style="stop-color:var(${s})"/>`).join('')
+    }</linearGradient></defs><path d="${d}" fill="none" stroke="url(#${id})" stroke-width="2"/>`;
+  };
+  new ResizeObserver(draw).observe(el);
+}
+frame($('#h1a'), ['--g2', '--g3', '--g4'], true);
+frame($('#h1b'), ['--g1', '--g2', '--g3', '--g4']);
+
+/* ---------- prompt que se escribe solo ---------- */
+const PROMPTS = [
+  ['vigia watch nexus synapse lifeos vigia --every 30s', '✓ 4 servicios bajo vigilancia'],
+  ['vigia latency synapse --window 120 --p95', '✓ p95 = 212 ms · p50 = 148 ms'],
+  ['vigia alert --channel telegram --when "2 de 3"', '✓ alertas activadas en cambios de estado'],
+  ['vigia history nexus --since 24h --format json', '✓ 2 880 chequeos exportados'],
+];
+(async function typeLoop() {
+  const typed = $('#typed'), out = $('#out'), next = $('#next');
+  for (let i = 0; ; i = (i + 1) % PROMPTS.length) {
+    const [cmd, res] = PROMPTS[i];
+    next.textContent = '❯ ' + PROMPTS[(i + 1) % PROMPTS.length][0];
+    for (let k = 1; k <= cmd.length; k++) { typed.textContent = cmd.slice(0, k); await sleep(38); }
+    await sleep(320);
+    out.textContent = res;
+    await sleep(2600);
+    out.textContent = '';
+    for (let k = cmd.length; k > 0; k -= 2) { typed.textContent = cmd.slice(0, Math.max(0, k - 2)); await sleep(14); }
+    await sleep(250);
+  }
+})();
+
+/* ---------- carrusel de producto ---------- */
+const TABS = [
+  ['Health checks HTTP', 'Peticiones GET concurrentes a cada servicio, con timeout configurable. Cualquier respuesta ≥ 400 o error de red cuenta como fallo.'],
+  ['Latencia p50 / p95', 'Percentiles calculados sobre una ventana móvil de los últimos 120 chequeos: la mediana dice lo normal, el p95 dice lo que sufren tus usuarios.'],
+  ['Regla 2 de 3', 'Un servicio solo se declara caído si 2 de los últimos 3 chequeos fallan. Un timeout aislado no despierta a nadie a las 3 a. m.'],
+  ['Re-chequeo rápido', 'Al primer fallo VIGÍA vuelve a consultar en segundos en lugar de esperar el intervalo completo: confirma rápido, sin falsas alarmas.'],
+  ['Alertas por Telegram', 'Notifica solo cuando el estado cambia (caída y recuperación), nunca en cada chequeo.'],
+  ['Eventos en tiempo real', 'Cada resultado viaja por WebSocket al panel y al robot en milisegundos. Sin recargar, sin polling.'],
+  ['Historial en SQLite', 'Cada chequeo queda guardado como serie de tiempo y se consulta por la API REST.'],
+  ['Autodiagnóstico', 'VIGÍA también se vigila a sí misma a través de su propio endpoint /healthz.'],
+  ['Modo demo', 'Sin backend, la página simula los chequeos en tu navegador con exactamente las mismas reglas.'],
+];
+TABS.push(TABS[0]);  // copia para el bucle infinito
+const track = $('#track'), tdesc = $('#tdesc');
+track.innerHTML = TABS.map((t, i) => `<div class="tabx"><div class="n">${pad2(i % (TABS.length - 1) + 1)}</div><div class="l">${t[0]}</div><span class="fr"><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i></span></div>`).join('');
+let tab = 0;
+function setTab(i, animate = true) {
+  track.style.transition = animate ? '' : 'none';
+  track.style.transform = `translateX(${-i * track.children[0].offsetWidth}px)`;
+  [...track.children].forEach((el, k) => { el.classList.toggle('on', k === i); el.classList.toggle('past', k < i); });
+  if (!animate) { void track.offsetWidth; track.style.transition = ''; return; }
+  tdesc.classList.add('out');
+  setTimeout(() => { tdesc.textContent = TABS[i][1]; tdesc.classList.remove('out'); }, 350);
+}
+tdesc.textContent = TABS[0][1];
+setTab(0, false);
+setInterval(() => {
+  if (document.hidden) return;
+  setTab(++tab);
+  if (tab === TABS.length - 1) setTimeout(() => { tab = 0; setTab(0, false); }, 950);
+}, 2400);
+addEventListener('resize', () => setTab(tab, false));
+
+/* ---------- diagrama de arquitectura ---------- */
+const NODES = {
+  cfg: [0, 0, 'targets.json', 'configuración'],
+  sch: [1, 0, 'Scheduler', 'asyncio · intervalo'],
+  chk: [2, 0, 'Checkers ×N', 'httpx · concurrentes'],
+  db:  [2, 1, 'SQLite', 'serie de tiempo'],
+  ev:  [1, 1, 'Evaluador', 'regla 2 de 3'],
+  al:  [0, 1, 'Alertas', 'telegram'],
+  api: [1, 2, 'FastAPI', 'rest + websocket'],
+  ui:  [0, 2, 'Robot + UI', 'three.js'],
+};
+const EDGES = [['cfg', 'sch'], ['sch', 'chk'], ['chk', 'db'], ['db', 'ev'], ['ev', 'al'], ['ev', 'api'], ['api', 'ui'], ['ev', 'sch', 'dash']];
+(function buildDiagram() {
+  const W = 168, H = 54, CX = [0, 236, 472], RY = [0, 128, 256];
+  const box = id => { const [c, r] = NODES[id]; return { x: CX[c], y: RY[r], cx: CX[c] + W / 2, cy: RY[r] + H / 2, c, r }; };
+  const svg = $('#diag');
+  svg.setAttribute('viewBox', '-4 -8 648 326');
+  let html = `<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L8 4L0 8" fill="none" stroke="#141414" stroke-width="1.2"/></marker></defs>`;
+  EDGES.forEach(([a, b, kind], i) => {
+    const A = box(a), B = box(b);
+    let d;
+    if (A.r === B.r) {
+      const dir = Math.sign(B.c - A.c);
+      d = `M${dir > 0 ? A.x + W : A.x} ${A.cy}H${dir > 0 ? B.x - 3 : B.x + W + 3}`;
+    } else {
+      const dir = Math.sign(B.r - A.r), x = kind ? A.cx + 44 : A.cx;
+      d = `M${x} ${dir > 0 ? A.y + H : A.y}V${dir > 0 ? B.y - 3 : B.y + H + 3}`;
+    }
+    html += `<path class="ed ${kind ? 'dash' : ''}" d="${d}" marker-end="url(#ah)"/>`;
+    if (kind) html += `<text class="el" x="${A.cx + 52}" y="${(A.y + B.y + H) / 2 + 3}">RE-CHEQUEO</text>`;
+    else html += `<circle class="pk" r="3"><animateMotion dur="1.3s" repeatCount="indefinite" begin="${(i * .32).toFixed(2)}s" path="${d}"/></circle>`;
+  });
+  for (const id in NODES) {
+    const { x, y } = box(id), [, , t, s] = NODES[id];
+    html += `<g class="nd" id="nd-${id}"><rect x="${x}" y="${y}" width="${W}" height="${H}"/><text class="t" x="${x + 14}" y="${y + 23}">${t}</text><text class="s" x="${x + 14}" y="${y + 40}">${s}</text></g>`;
+  }
+  svg.innerHTML = html;
+})();
+function pulseDiagram(fail) {
+  const seq = ['chk', 'db', 'ev', 'api', 'ui'];
+  seq.forEach((id, i) => setTimeout(() => {
+    const n = $('#nd-' + id); if (!n) return;
+    n.classList.add('hit'); setTimeout(() => n.classList.remove('hit'), 380);
+  }, i * 140));
+  if (fail) setTimeout(() => { const n = $('#nd-sch'); n.classList.add('hit'); setTimeout(() => n.classList.remove('hit'), 380); }, 3 * 140);
+}
+
+/* ---------- motor de datos (compartido demo / live) ---------- */
+const WINDOW = 120;
+const STATUS_TXT = { up: 'Operativo', degraded: 'Degradado', down: 'Caído', unknown: 'Sin datos' };
+const RANK = { unknown: 0, up: 1, degraded: 2, down: 3 };
+const S = { mode: 'connecting', cfg: { interval: 4, recheck: 1.5, slow_ms: 800, timeout: 5 }, services: [], sel: 0 };
+
+// Mismas reglas que backend/app/evaluator.py
+function pct(arr, p) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  return s[Math.max(0, Math.ceil(p / 100 * s.length) - 1)];
+}
+function summarize(s) {
+  const h = s.history, ok = h.filter(c => c.ok), ms = ok.map(c => c.ms);
+  const last3 = h.slice(-3), failures = last3.filter(c => !c.ok).length, last = h.at(-1) || null;
+  s.failures = failures;
+  s.status = !last ? 'unknown' : failures >= 2 ? 'down' : (!last.ok || last.ms > S.cfg.slow_ms) ? 'degraded' : 'up';
+  s.uptime = h.length ? ok.length / h.length * 100 : null;
+  s.p50 = pct(ms, 50); s.p95 = pct(ms, 95); s.last = last;
+  return s;
+}
+
+const DEMO = [
+  { id: 'nexus', name: 'NEXUS', url: 'github.com/saracastrillons/nexus', desc: 'Inteligencia global · React + FastAPI', base: 140 },
+  { id: 'synapse', name: 'SYNAPSE', url: 'github.com/saracastrillons/synapse', desc: 'Gemelo digital · R3F + PostGIS', base: 165 },
+  { id: 'lifeos', name: 'LIFEOS', url: 'github.com/saracastrillons/lifeos', desc: 'Sistema operativo personal · ML', base: 150 },
+  { id: 'vigia', name: 'VIGÍA', url: '127.0.0.1/healthz', desc: 'Autodiagnóstico · /healthz', base: 6 },
+];
+const Demo = {
+  start() {
+    S.mode = 'demo';
+    S.cfg = { interval: 4, recheck: 1.5, slow_ms: 800, timeout: 5 };
+    const now = Date.now();
+    S.services = DEMO.map(d => {
+      const history = [];
+      for (let i = WINDOW - 1; i >= 0; i--) {
+        const ok = i < 6 || Math.random() > .006;
+        history.push({ t: now - i * 30000, ok, ms: ok ? this.lat(d.base, false) : null, code: ok ? 200 : null });
+      }
+      return summarize({ ...d, history, simulated: false });
+    });
+    setMode();
+    renderAll();
+    S.services.forEach((s, i) => setTimeout(() => this.loop(s), 700 + i * 950));
+  },
+  lat(base, spikes = true) {
+    const spike = spikes && Math.random() < .012 ? 700 + Math.random() * 700 : 0;
+    return Math.round(base * (.75 + Math.random() * .5) + spike);
+  },
+  loop(s) {
+    clearTimeout(s._timer);
+    const c = s.simulated
+      ? { t: Date.now(), ok: false, ms: null, code: null, error: 'incidente simulado' }
+      : { t: Date.now(), ok: true, ms: this.lat(s.base), code: 200 };
+    const prev = s.status;
+    s.history.push(c);
+    if (s.history.length > WINDOW) s.history.shift();
+    summarize(s);
+    onCheck(s, c, prev);
+    const wait = !c.ok && s.status !== 'down' ? S.cfg.recheck : S.cfg.interval;
+    s._timer = setTimeout(() => this.loop(s), wait * 1000 * (.9 + Math.random() * .2));
+  },
+  simulate(id, down) {
+    const s = S.services.find(x => x.id === id);
+    s.simulated = down;
+    clearTimeout(s._expire);
+    if (down) s._expire = setTimeout(() => this.simulate(id, false), 60000);
+    this.loop(s);
+    renderPanel();
+  },
+};
+const Live = {
+  async start() {
+    const r = await fetch('/api/services', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if (!Array.isArray(j.services)) throw new Error('respuesta inesperada');
+    this.apply(j);
+    this.socket();
+  },
+  apply(j) {
+    S.mode = 'live';
+    S.cfg = { interval: j.interval, recheck: j.recheck, slow_ms: j.slow_ms, timeout: j.timeout };
+    S.services = j.services;
+    S.sel = Math.min(S.sel, S.services.length - 1);
+    renderAll();
+  },
+  socket() {
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+    ws.onopen = () => { S.mode = 'live'; setMode(); };
+    ws.onmessage = e => {
+      const m = JSON.parse(e.data);
+      if (m.type === 'hello') this.apply(m);
+      else if (m.type === 'check') {
+        const i = S.services.findIndex(s => s.id === m.service.id);
+        if (i < 0) return;
+        const prev = S.services[i].status;
+        S.services[i] = m.service;
+        onCheck(m.service, m.check, prev);
+      }
+    };
+    ws.onclose = () => { S.mode = 'reconnecting'; setMode(); setTimeout(() => this.socket(), 3000); };
+  },
+  async simulate(id, down) {
+    await fetch(`/api/services/${encodeURIComponent(id)}/simulate`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ down }),
+    });
+  },
+};
+const engine = () => (S.mode === 'demo' ? Demo : Live);
+
+/* ---------- render ---------- */
+const fmtMs = v => (v == null ? '—' : Math.round(v) + ' ms');
+const fmtUp = v => (v == null ? '—' : (v >= 99.995 ? '100' : v.toFixed(2)));
+const statusLabel = s => (s.status === 'degraded' && s.last && !s.last.ok ? `Verificando · ${s.failures}/3` : STATUS_TXT[s.status]);
+const setDot = (el, st) => { el.className = 'dot ' + st; };
+
+function setMode() {
+  const m = $('#mode'), txt = { demo: 'Demo · datos simulados', live: 'Live · backend conectado', reconnecting: 'Reconectando…', connecting: 'Conectando' }[S.mode];
+  setDot($('.dot', m), S.mode === 'live' ? 'up' : S.mode === 'demo' ? 'degraded' : 'unknown');
+  $('span', m).textContent = txt;
+}
+
+function renderGlobal() {
+  const worst = S.services.reduce((w, s) => (RANK[s.status] > RANK[w] ? s.status : w), 'unknown');
+  V.status = worst;
+  document.body.classList.toggle('st-degraded', worst === 'degraded');
+  document.body.classList.toggle('st-down', worst === 'down');
+  const ok = S.services.filter(s => s.status === 'up').length, down = S.services.filter(s => s.status === 'down').length;
+  setDot($('#navDot'), worst);
+  $('#navChip').textContent = down ? `${down} caído${down > 1 ? 's' : ''}` : `${ok}/${S.services.length} operativos`;
+}
+
+function renderSpecs() {
+  const c = S.cfg;
+  $('#specs').innerHTML = [
+    ['Intervalo', c.interval + ' s'], ['Re-chequeo', c.recheck + ' s'], ['Timeout', c.timeout + ' s'],
+    ['Lento si', '> ' + c.slow_ms + ' ms'], ['Caído si', '2 de 3 fallan'], ['Ventana', WINDOW + ' chequeos'],
+  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+}
+
+let uptAnim = null;
+function renderPanel(fadeIn = false) {
+  const s = S.services[S.sel]; if (!s) return;
+  const n = S.services.length, nx = S.services[(S.sel + 1) % n];
+  $('#srvNo').textContent = pad2(S.sel + 1);
+  $('#cnt').textContent = `${pad2(S.sel + 1)} / ${pad2(n)}`;
+  $('#av').textContent = s.name[0];
+  $('#srvName').textContent = s.name;
+  $('#srvRole').textContent = `${s.url.replace(/^https?:\/\//, '')} · ${s.desc}`;
+  setDot($('#nmDot'), s.status);
+  const pill = $('#pill'); setDot($('.dot', pill), s.status); $('span', pill).textContent = statusLabel(s);
+  pill.style.borderColor = s.status === 'down' ? 'var(--down)' : '';
+  // contador animado del uptime
+  const el = $('#upt'), to = s.uptime, from = fadeIn ? Math.max(0, (to ?? 0) - 3) : parseFloat(el.dataset.v ?? to ?? 0);
+  cancelAnimationFrame(uptAnim);
+  if (to == null) { el.textContent = '—'; } else {
+    const t0 = performance.now();
+    const step = now => {
+      const k = Math.min(1, (now - t0) / 600), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
+      el.innerHTML = `${fmtUp(v)}<small>%</small>`;
+      if (k < 1) uptAnim = requestAnimationFrame(step);
+    };
+    uptAnim = requestAnimationFrame(step);
+    el.dataset.v = to;
+  }
+  $('#uptl').textContent = `Uptime · últimos ${s.history.length} chequeos`;
+  $('#p50').textContent = fmtMs(s.p50);
+  $('#p95').textContent = fmtMs(s.p95);
+  $('#lastMs').textContent = s.last ? (s.last.ok ? fmtMs(s.last.ms) : (s.last.code ? 'HTTP ' + s.last.code : 'Fallo')) : '—';
+  renderAgo();
+  drawSpark(s);
+  $('#simBtn').innerHTML = s.simulated ? 'Restaurar servicio <span>(Click aquí)</span>' : 'Simular incidente <span>(Click aquí)</span>';
+  $('#simNote').textContent = s.simulated
+    ? (s.status === 'down' ? 'Caída confirmada · se restaura sola en 60 s' : 'Fallo detectado · confirmando con regla 2 de 3…')
+    : 'Fuerza fallos en este servicio y mira cómo reacciona el robot';
+  $('#ghost').innerHTML = `<b>${nx.name}</b><span>${fmtUp(nx.uptime)}%</span>`;
+}
+function renderAgo() {
+  const s = S.services[S.sel];
+  $('#ago').textContent = s?.last ? Math.max(0, Math.round((Date.now() - s.last.t) / 1000)) + ' s' : '—';
+}
+setInterval(renderAgo, 1000);
+
+function drawSpark(s) {
+  const c = $('#spark'), dpr = Math.min(devicePixelRatio, 2), w = c.clientWidth, h = c.clientHeight;
+  if (!w) return;
+  c.width = w * dpr; c.height = h * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr);
+  const H = s.history.slice(-90), n = H.length;
+  if (n < 2) return;
+  const max = Math.max(300, ...H.filter(k => k.ok).map(k => k.ms)) * 1.12;
+  const X = i => (i / (n - 1)) * (w - 4) + 2, Y = ms => h - 4 - (ms / max) * (h - 10);
+  const slow = s.slow_ms ?? S.cfg.slow_ms;
+  if (slow < max) {
+    x.strokeStyle = 'rgba(232,137,12,.55)'; x.setLineDash([3, 3]); x.lineWidth = 1;
+    x.beginPath(); x.moveTo(0, Y(slow)); x.lineTo(w, Y(slow)); x.stroke(); x.setLineDash([]);
+  }
+  H.forEach((k, i) => { if (!k.ok) { x.fillStyle = 'rgba(229,56,59,.22)'; x.fillRect(X(i) - 1.5, 0, 3, h); } });
+  const grad = x.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(20,20,20,.12)'); grad.addColorStop(1, 'rgba(20,20,20,0)');
+  x.beginPath();
+  let started = false;
+  H.forEach((k, i) => { if (!k.ok) return; started ? x.lineTo(X(i), Y(k.ms)) : (x.moveTo(X(i), Y(k.ms)), started = true); });
+  x.strokeStyle = '#141414'; x.lineWidth = 1.25; x.stroke();
+  x.lineTo(X(n - 1), h); x.lineTo(X(0), h); x.closePath(); x.fillStyle = grad; x.fill();
+  const last = H[n - 1];
+  x.fillStyle = last.ok ? '#141414' : '#e5383b';
+  x.beginPath(); x.arc(X(n - 1), last.ok ? Y(last.ms) : h - 4, 3, 0, Math.PI * 2); x.fill();
+}
+
+function logLine(s, c) {
+  const log = $('#log'), d = new Date(c.t);
+  const ln = document.createElement('div');
+  ln.className = 'ln';
+  ln.innerHTML = `<span>${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}</span><span>${s.name}</span><span>${c.code ?? '—'}</span><span>${c.ok ? fmtMs(c.ms) : 'fallo'}</span><span class="st ${s.status}">${statusLabel(s)}</span>`;
+  log.prepend(ln);
+  while (log.children.length > 6) log.lastChild.remove();
+}
+
+function toast(html, ms = 4200) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.innerHTML = html;
+  $('#toasts').prepend(t);
+  setTimeout(() => { t.classList.add('bye'); setTimeout(() => t.remove(), 400); }, ms);
+}
+
+function onCheck(s, c, prev) {
+  logLine(s, c);
+  pulseDiagram(!c.ok);
+  if (prev && prev !== s.status) {
+    if (s.status === 'down') toast(`<i class="dot down"></i>${s.name} caído · ${s.failures}/3 chequeos fallidos`);
+    else if (prev === 'down') toast(`<i class="dot up"></i>${s.name} recuperado`);
+    if (s.status === 'down' || prev === 'down') {
+      const n = $('#nd-al'); n.classList.add('hit'); setTimeout(() => n.classList.remove('hit'), 900);
+    }
+  }
+  renderGlobal();
+  if (S.services[S.sel]?.id === s.id) renderPanel();
+  else $('#ghost').innerHTML = `<b>${S.services[(S.sel + 1) % S.services.length].name}</b><span>${fmtUp(S.services[(S.sel + 1) % S.services.length].uptime)}%</span>`;
+}
+
+function renderAll() { setMode(); renderSpecs(); renderGlobal(); renderPanel(true); }
+
+/* ---------- controles del panel ---------- */
+const swapEls = ['#pbody', '#av', '#nm', '#srvRole', '#ghost'].map(q => $(q));
+let swapping = false;
+async function go(delta) {
+  if (swapping || !S.services.length) return;
+  swapping = true;
+  swapEls.forEach(e => e.classList.add('out'));
+  await sleep(450);
+  S.sel = (S.sel + delta + S.services.length) % S.services.length;
+  renderPanel(true);
+  swapEls.forEach(e => e.classList.remove('out'));
+  swapping = false;
+}
+$('#prev').onclick = () => go(-1);
+$('#nxt').onclick = () => go(1);
+$('#simBtn').onclick = async () => {
+  const s = S.services[S.sel]; if (!s) return;
+  try { await engine().simulate(s.id, !s.simulated); }
+  catch { toast('<i class="dot down"></i>No se pudo contactar al backend'); }
+};
+addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea')) return;
+  const r = $('#vivo').getBoundingClientRect();
+  if (r.top > innerHeight * .5 || r.bottom < innerHeight * .5) return;
+  if (e.key === 'ArrowRight') go(1);
+  if (e.key === 'ArrowLeft') go(-1);
+});
+addEventListener('resize', () => S.services[S.sel] && drawSpark(S.services[S.sel]));
+
+/* ---------- arranque: backend real si existe, si no demo ---------- */
+renderSpecs();
+Live.start().catch(() => Demo.start());
+</script>
+
+<!-- ====================== robot 3D ====================== -->
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const V = window.vigia;
+const canvas = document.getElementById('gl');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+} catch (e) {
+  canvas.remove();
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, .1, 100);
+
+/* ---------- luces ---------- */
+scene.add(new THREE.HemisphereLight(0xfff6ee, 0xd9d2c8, .7));
+const key = new THREE.DirectionalLight(0xfff3e6, 1.7);
+key.position.set(-3, 5, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
+key.shadow.radius = 6;
+key.shadow.bias = -.0005;
+Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: .5, far: 20 });
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xfff0e6, 1.2);
+rim.position.set(4, 2, -4);
+scene.add(rim);
+const fill = new THREE.PointLight(0x5ad1ff, 2.2, 6);
+fill.position.set(-3.2, 1.2, .6);
+scene.add(fill);
+
+/* ---------- texturas generadas ---------- */
+const PAL = {
+  up:       ['#4f7cff', '#20c3ff', '#2ee6a6', '#9be15d', '#2ee6a6', '#20c3ff', '#4f7cff'],
+  unknown:  ['#4f7cff', '#20c3ff', '#2ee6a6', '#9be15d', '#2ee6a6', '#20c3ff', '#4f7cff'],
+  degraded: ['#ff8a3d', '#ffb347', '#ffd166', '#ffe08a', '#ffd166', '#ffb347', '#ff8a3d'],
+  down:     ['#c0142f', '#ff3d5a', '#ff5a5f', '#ff9a8a', '#ff5a5f', '#ff3d5a', '#c0142f'],
+};
+const FILL = { up: 0x5ad1ff, unknown: 0x5ad1ff, degraded: 0xffb347, down: 0xff3d5a };
+const cols = a => a.map(h => new THREE.Color(h));
+const ringCv = document.createElement('canvas');
+ringCv.width = ringCv.height = 512;
+const rc = ringCv.getContext('2d');
+const ringTex = new THREE.CanvasTexture(ringCv);
+ringTex.colorSpace = THREE.SRGBColorSpace;
+let ringFrom = cols(PAL.up), ringTo = cols(PAL.up), ringK = 1;
+const tmpC = new THREE.Color();
+const ringNow = () => ringFrom.map((c, i) => c.clone().lerp(ringTo[i], ringK));
+function paintRing() {
+  const g = rc.createConicGradient(200 * Math.PI / 180, 256, 256);
+  ringFrom.forEach((c, i) => {
+    tmpC.copy(c).lerp(ringTo[i], ringK);
+    g.addColorStop(i / (ringFrom.length - 1), '#' + tmpC.getHexString());
+  });
+  rc.fillStyle = g;
+  rc.fillRect(0, 0, 512, 512);
+  ringTex.needsUpdate = true;
+}
+paintRing();
+
+const faceCv = document.createElement('canvas');
+faceCv.width = faceCv.height = 512;
+const fx = faceCv.getContext('2d');
+const faceTex = new THREE.CanvasTexture(faceCv);
+faceTex.colorSpace = THREE.SRGBColorSpace;
+
+/* ---------- materiales ---------- */
+const ENV = .9;
+const shell = new THREE.MeshPhysicalMaterial({ color: 0xeeebe6, roughness: .38, clearcoat: .45, clearcoatRoughness: .3, envMapIntensity: ENV });
+const shellLight = new THREE.MeshPhysicalMaterial({ color: 0xf8f6f2, roughness: .34, clearcoat: .45, clearcoatRoughness: .3, envMapIntensity: ENV });
+const dark = new THREE.MeshStandardMaterial({ color: 0x1b1b1f, roughness: .55, metalness: .3, envMapIntensity: ENV });
+const deep = new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: .6, metalness: .2, envMapIntensity: ENV });
+const pedMat = new THREE.MeshStandardMaterial({ color: 0x2a2928, roughness: .9, envMapIntensity: ENV });
+const ringMat = new THREE.MeshPhysicalMaterial({ map: ringTex, emissiveMap: ringTex, emissive: 0xffffff, emissiveIntensity: .22, roughness: .5, clearcoat: .35, envMapIntensity: ENV });
+const screenMat = new THREE.MeshPhysicalMaterial({ color: 0x050507, roughness: .15, clearcoat: 1, clearcoatRoughness: .05, emissive: 0xffffff, emissiveMap: faceTex, emissiveIntensity: 1.6, envMapIntensity: .45 });
+
+/* ---------- helpers de geometría ---------- */
+function mesh(geo, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+const rbox = (w, h, d, r, seg = 4) => new RoundedBoxGeometry(w, h, d, seg, r);
+function rr(w, h, r, s) {
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+function remapUV(g, w, h) {
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + w / 2) / w, (p.getY(i) + h / 2) / h);
+  uv.needsUpdate = true;
+  return g;
+}
+function frameGeo(ow, oh, orr, iw, ih, ir, depth, bevel) {
+  const s = rr(ow, oh, orr, new THREE.Shape());
+  s.holes.push(rr(iw, ih, ir, new THREE.Path()));
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 20 });
+  return remapUV(g, ow, oh);
+}
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+/* ---------- robot ---------- */
+const robot = new THREE.Group();
+scene.add(robot);
+const body = new THREE.Group();
+robot.add(body);
+
+// cabeza
+const head = new THREE.Group();
+head.position.y = .78;
+head.rotation.order = 'YXZ';
+body.add(head);
+head.add(mesh(rbox(1.5, 1.42, 1.3, .2, 5), shell, 0, .78, 0));
+head.add(mesh(rbox(1.28, 1.14, .9, .16), deep, 0, .78, -.42));
+const bar = new THREE.BoxGeometry(1, 1, 1);
+for (let i = 0; i < 26; i++) {
+  const b = new THREE.Mesh(bar, dark);
+  if (i % 4 === 0) {
+    b.scale.set(.04 + rnd() * .16, .03, .035);
+    b.position.set((rnd() - .5) * 1.0, .78 + .585, -.7 - rnd() * .14);
+  } else if (rnd() < .5) {
+    b.scale.set(.05 + rnd() * .2, .035, .03);
+    b.position.set((rnd() - .5) * 1.0, .78 + (rnd() - .5) * .9, -.885);
+  } else {
+    b.scale.set(.035, .06 + rnd() * .2, .03);
+    b.position.set((rnd() - .5) * 1.0, .78 + (rnd() - .5) * .9, -.885);
+  }
+  head.add(b);
+}
+head.add(mesh(frameGeo(1.5, 1.44, .3, 1.08, 1.02, .2, .1, .03), ringMat, 0, .78, .6));
+head.add(mesh(frameGeo(1.12, 1.06, .22, .94, .88, .15, .04, .01), shellLight, 0, .78, .62));
+const screen = mesh(remapUV(new THREE.ShapeGeometry(rr(.9, .84, .12, new THREE.Shape()), 12), .9, .84), screenMat, 0, .78, .665);
+screen.castShadow = false;
+head.add(screen);
+for (const side of [-1, 1]) {
+  const ear = mesh(new THREE.CylinderGeometry(.22, .22, .14, 36), shellLight, side * .8, .78, -.05);
+  ear.rotation.z = Math.PI / 2;
+  head.add(ear);
+  const cap = mesh(new THREE.CylinderGeometry(.14, .14, .06, 32), dark, side * .89, .78, -.05);
+  cap.rotation.z = Math.PI / 2;
+  head.add(cap);
+}
+const cableG = new THREE.Group();
+cableG.position.set(.86, .74, -.28);
+cableG.rotation.y = Math.PI / 2;
+const cable = mesh(new THREE.TorusGeometry(.26, .035, 10, 40, Math.PI), dark);
+cable.rotation.z = -Math.PI / 2;
+cableG.add(cable);
+head.add(cableG);
+
+// cuello y torso
+body.add(mesh(new THREE.CylinderGeometry(.17, .2, .32, 24), dark, 0, .74, 0));
+body.add(mesh(rbox(1.22, 1.12, .92, .24, 5), shell, 0, .06, 0));
+body.add(mesh(rbox(1.04, .14, .8, .06, 3), shellLight, 0, .6, 0));
+const ledMats = [];
+[-.17, 0, .17].forEach(x => {
+  const m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x2ee6a6, emissiveIntensity: 2, roughness: .3 });
+  ledMats.push(m);
+  body.add(mesh(new THREE.SphereGeometry(.045, 16, 12), m, x, .3, .46));
+});
+for (const side of [-1, 1]) {
+  body.add(mesh(rbox(.09, .34, .06, .03, 2), deep, side * .32, -.08, .44));
+  const lip = mesh(new THREE.TorusGeometry(.065, .022, 8, 20, Math.PI), dark, side * .32, .11, .455);
+  body.add(lip);
+}
+body.add(mesh(rbox(.86, .22, .7, .08, 3), dark, 0, -.5, 0));
+
+// brazos
+const arms = [];
+for (const side of [-1, 1]) {
+  const sh = new THREE.Group();
+  sh.position.set(side * .74, .4, 0);
+  sh.rotation.z = side * .16;
+  body.add(sh);
+  sh.add(mesh(new THREE.SphereGeometry(.17, 24, 16), dark));
+  sh.add(mesh(rbox(.32, .52, .36, .12, 3), shell, 0, -.34, 0));
+  sh.add(mesh(new THREE.SphereGeometry(.12, 20, 14), dark, 0, -.66, 0));
+  const fa = new THREE.Group();
+  fa.position.y = -.66;
+  fa.rotation.x = -.35;
+  sh.add(fa);
+  fa.add(mesh(rbox(.34, .44, .38, .13, 3), shellLight, 0, -.28, 0));
+  fa.add(mesh(rbox(.1, .18, .12, .04, 2), shellLight, -side * .2, -.2, .1));
+  arms.push({ sh, fa, side });
+}
+
+// piernas
+for (const side of [-1, 1]) {
+  const x = side * .24;
+  body.add(mesh(new THREE.SphereGeometry(.14, 20, 14), dark, x, -.6, 0));
+  body.add(mesh(rbox(.38, .46, .44, .12, 3), shell, x, -.86, 0));
+  body.add(mesh(new THREE.SphereGeometry(.1, 18, 12), dark, x, -1.14, 0));
+  body.add(mesh(rbox(.44, .2, .62, .08, 3), shellLight, x, -1.32, .06));
+}
+
+// pedestal
+const ped = mesh(rbox(1.7, 1.6, 1.7, .03, 2), pedMat, 0, -2.22, 0);
+ped.castShadow = false;
+scene.add(ped);
+
+/* ---------- cara ---------- */
+let faceMode = 'eyes', faceA = 1, blinkAt = -1, nextBlink = 2;
+const FACE_COL = { up: ['#eafff8', '#5ff5c8'], unknown: ['#eafff8', '#5ff5c8'], degraded: ['#ffd27a', '#ffb347'] };
+function eyes(t, ox, oy, squint, col, glow) {
+  const bt = (t - blinkAt) / .18;
+  const bs = bt >= 0 && bt < 1 ? 1 - .9 * Math.sin(bt * Math.PI) : 1;
+  fx.shadowColor = glow; fx.shadowBlur = 18; fx.fillStyle = col;
+  for (const [x, y] of [[196, 262], [316, 252]]) {
+    fx.save();
+    if (squint) { fx.beginPath(); fx.rect(0, y + oy - 6, 512, 512); fx.clip(); }
+    fx.beginPath(); fx.ellipse(x + ox, y + oy, 30, 38 * bs, 0, 0, Math.PI * 2); fx.fill();
+    fx.restore();
+  }
+  if (squint) {
+    fx.strokeStyle = col; fx.lineWidth = 10; fx.lineCap = 'round';
+    fx.beginPath(); fx.moveTo(160 + ox, 214 + oy); fx.lineTo(226 + ox, 194 + oy); fx.stroke();
+    fx.beginPath(); fx.moveTo(286 + ox, 186 + oy); fx.lineTo(352 + ox, 204 + oy); fx.stroke();
+  }
+}
+function alertFace(t) {
+  const p = .5 + .5 * Math.sin(t * 8);
+  fx.shadowColor = '#ff3d5a'; fx.shadowBlur = 18 + 18 * p; fx.fillStyle = '#ff5a64';
+  fx.beginPath(); fx.roundRect(226, 112, 60, 200, 30); fx.fill();
+  fx.beginPath(); fx.arc(256, 376, 32, 0, Math.PI * 2); fx.fill();
+}
+function ecg(u) {
+  if (u > .30 && u < .36) return -12 * Math.sin((u - .30) / .06 * Math.PI);
+  const pts = [[.42, 0], [.45, 16], [.49, -118], [.53, 44], [.56, 0]];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [a, ya] = pts[i], [b, yb] = pts[i + 1];
+    if (u >= a && u <= b) return ya + (yb - ya) * (u - a) / (b - a);
+  }
+  if (u > .66 && u < .78) return -24 * Math.sin((u - .66) / .12 * Math.PI);
+  return 0;
+}
+function pulseFace(t, col, glow, speed) {
+  fx.shadowColor = glow; fx.shadowBlur = 18; fx.strokeStyle = col;
+  fx.lineWidth = 10; fx.lineJoin = 'round'; fx.lineCap = 'round';
+  fx.beginPath();
+  const P = 200;
+  for (let x = 60; x <= 452; x += 3) {
+    const u = ((((x + t * speed) % P) + P) % P) / P;
+    const y = 262 + ecg(u);
+    x === 60 ? fx.moveTo(x, y) : fx.lineTo(x, y);
+  }
+  fx.stroke();
+  fx.shadowBlur = 0;
+  for (const [x0, x1] of [[40, 150], [472, 362]]) {
+    const g = fx.createLinearGradient(x0, 0, x1, 0);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    fx.fillStyle = g;
+    fx.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0), 512);
+  }
+}
+function drawFace(t, st, mode, ptr) {
+  fx.globalAlpha = 1; fx.shadowBlur = 0;
+  fx.fillStyle = '#000'; fx.fillRect(0, 0, 512, 512);
+  fx.globalAlpha = faceA;
+  const [col, glow] = FACE_COL[st] || FACE_COL.up;
+  if (mode === 'alert') alertFace(t);
+  else if (mode === 'pulse') pulseFace(t, col, glow, st === 'degraded' ? 90 : 160);
+  else eyes(t, ptr.x * 16, -ptr.y * 10, st === 'degraded', col, glow);
+  faceTex.needsUpdate = true;
+}
+
+/* ---------- movimiento ---------- */
+const S = [
+  { cz: 11.6, cy: 1.1, cx: 0, ly: .55, lx: 0, by: -.32, hy: -.38, hp: .14, hr: .2 },
+  { cz: 6.9, cy: 1.95, cx: 0, ly: 1.72, lx: 0, by: -.2, hy: -.06, hp: .04, hr: 0 },
+  { cz: 10.4, cy: 1.3, cx: -2.6, ly: .7, lx: -2.6, by: -.78, hy: -.42, hp: .1, hr: .1 },
+  { cz: 6.9, cy: 1.95, cx: -.9, ly: 1.72, lx: -.9, by: -.2, hy: -.12, hp: .04, hr: 0 },
+];
+const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+function blend(p) {
+  const i = Math.min(Math.floor(p), S.length - 2), f = ease(Math.min(1, Math.max(0, p - i)));
+  const a = S[i], b = S[i + 1], o = {};
+  for (const k in a) o[k] = a[k] + (b[k] - a[k]) * f;
+  return o;
+}
+function scrollP() {
+  const secs = V.sections, y = scrollY;
+  for (let i = 0; i < secs.length - 1; i++) {
+    const a = secs[i].offsetTop, b = secs[i + 1].offsetTop;
+    if (y < b) return i + Math.max(0, (y - a) / (b - a));
+  }
+  return secs.length - 1;
+}
+
+const ptr = { x: 0, y: 0 }, sptr = { x: 0, y: 0 };
+addEventListener('pointermove', e => {
+  ptr.x = e.clientX / innerWidth * 2 - 1;
+  ptr.y = -(e.clientY / innerHeight * 2 - 1);
+}, { passive: true });
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight, false);
+});
+
+let sp = scrollP(), lastSt = 'up', alertK = 0, degK = 0;
+const fillTarget = new THREE.Color(FILL.up);
+const clock = new THREE.Clock();
+function frame() {
+  requestAnimationFrame(frame);
+  const t = clock.getElapsedTime();
+  const st = V.status === 'unknown' ? 'up' : V.status;
+
+  if (st !== lastSt) {
+    ringFrom = ringNow(); ringTo = cols(PAL[st]); ringK = 0;
+    fillTarget.set(FILL[st]);
+    if (st === 'down') alertK = 1;
+    lastSt = st;
+  }
+  if (ringK < 1) { ringK = Math.min(1, ringK + .03); paintRing(); }
+  alertK *= .985;
+  degK += ((st === 'degraded' ? 1 : 0) - degK) * .05;
+  fill.color.lerp(fillTarget, .05);
+  fill.intensity = 2.2 + (st === 'down' ? 1.6 + Math.sin(t * 8) * 1.2 : 0);
+
+  sp += (scrollP() - sp) * .08;
+  sptr.x += (ptr.x - sptr.x) * .06;
+  sptr.y += (ptr.y - sptr.y) * .06;
+  const mobile = innerWidth <= 900, s = blend(sp);
+  const cx = mobile ? 0 : s.cx, lx = mobile ? 0 : s.lx, cz = s.cz * (mobile ? 1.25 : 1);
+  camera.position.set(cx + sptr.x * .25, s.cy - sptr.y * .1, cz);
+  camera.lookAt(lx, s.ly, 0);
+
+  body.position.y = Math.sin(1.4 * t) * .02;
+  body.rotation.y = s.by + sptr.x * .12;
+  head.rotation.y = s.hy + sptr.x * .45 + Math.sin(t * 22) * .06 * alertK;
+  head.rotation.x = s.hp - sptr.y * .18 + Math.sin(.9 * t) * .02 + degK * .08;
+  head.rotation.z = s.hr + Math.sin(.7 * t) * .02;
+  for (const a of arms) {
+    a.sh.rotation.x = Math.sin(1.4 * t + a.side) * .05;
+    a.fa.rotation.x = -.35 + Math.sin(1.4 * t + a.side) * .06 - (st === 'down' ? .5 * alertK : 0);
+  }
+
+  const ledCols = st === 'down' ? [0xff3d5a, 0xff3d5a, 0xff3d5a] : st === 'degraded' ? [0xffb347, 0xffb347, 0xffb347] : [0x2ee6a6, 0x20c3ff, 0x4f7cff];
+  ledMats.forEach((m, i) => {
+    m.emissive.setHex(ledCols[i]);
+    m.emissiveIntensity = st === 'down' ? (Math.sin(t * 10 + i) > 0 ? 3 : .2) : 1.6 + Math.sin(t * 2.4 + i * 1.3) * .6;
+  });
+
+  if (t > nextBlink) { blinkAt = t; nextBlink = t + 2.5 + Math.random() * 3; }
+  const want = st === 'down' ? 'alert' : sp > 2.55 ? 'pulse' : 'eyes';
+  if (want !== faceMode) { faceMode = want; faceA = 0; }
+  faceA = Math.min(1, faceA + .05);
+  drawFace(t, st, faceMode, sptr);
+
+  renderer.render(scene, camera);
+  canvas.classList.add('on');
+}
+frame();
+</script>
+</body>
+</html>
