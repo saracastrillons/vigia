@@ -29,6 +29,9 @@ class Settings:
     simulate_ttl: float = 60.0   # un incidente simulado se restaura solo
     telegram_token: str | None = None
     telegram_chat: str | None = None
+    inspect_limit: int = 5       # revisiones "Pruébalo" por IP...
+    inspect_per: float = 60.0    # ...en esta ventana de segundos
+    trust_proxy: bool = False    # usar X-Forwarded-For (solo detrás de un proxy propio, p. ej. Render)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -46,6 +49,9 @@ class Settings:
             simulate_ttl=float(os.getenv("VIGIA_SIMULATE_TTL", 60)),
             telegram_token=os.getenv("TELEGRAM_BOT_TOKEN") or None,
             telegram_chat=os.getenv("TELEGRAM_CHAT_ID") or None,
+            inspect_limit=int(os.getenv("VIGIA_INSPECT_LIMIT", 5)),
+            inspect_per=float(os.getenv("VIGIA_INSPECT_PER", 60)),
+            trust_proxy=_env_bool("VIGIA_TRUST_PROXY", False),
         )
 
 
