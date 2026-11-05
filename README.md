@@ -9,6 +9,8 @@ Monitor de servicios **autoalojado**: hace *health checks* HTTP concurrentes, gu
 | ![Arquitectura](docs/arquitectura.png) | ![En vivo](docs/vivo.png) |
 | **Pruébalo: revisión real de cualquier URL** | **Protección SSRF bloqueando metadatos de la nube** |
 | ![Pruébalo](docs/pruebalo.png) | ![SSRF](docs/ssrf.png) |
+| **Página de estado pública de cada servicio** | **Sobre el proyecto** |
+| ![Página de estado](docs/estado.png) | ![Proyecto](docs/proyecto.png) |
 
 ## ¿Qué hace?
 
@@ -23,8 +25,11 @@ Monitor de servicios **autoalojado**: hace *health checks* HTTP concurrentes, gu
 - **Incidentes simulados** para demostrar el sistema. Se restauran solos a los 60 s.
 - **Pruébalo**: cualquier visitante revisa una URL pública y ve el código HTTP, la IP, el servidor, la versión de TLS, cuándo vence el certificado y un *waterfall* con los tiempos de DNS, TCP+TLS y HTTP.
 - **Protección SSRF**: solo http/https y puertos web, todas las IPs del dominio deben ser públicas, la conexión se hace a la IP ya validada (anti *DNS rebinding*), cada redirección se valida de nuevo y hay un límite de 5 revisiones por minuto por IP.
+- **Crea tu propio monitor**: cualquier visitante puede vigilar su sitio gratis durante 24 h, sin cuenta. Recibe una página de estado pública y una insignia. Hay un límite de 3 monitores por IP y 50 en total, y el chequeo de cada uno revalida la IP en cada intento (protección SSRF continua). Solo quien lo creó puede borrarlo, con un token cuyo hash se guarda en SQLite.
+- **Página de estado** (`/s/{id}`): uptime, p50/p95, gráfica interactiva de latencia, las últimas 90 casillas de chequeos, **historial de incidentes y MTTR** (tiempo medio de recuperación), enlace para compartir e insignia.
 - **Insignias SVG en vivo** (`/badge/{id}.svg`) para mostrar el uptime en cualquier README.
 - **Vista previa al compartir** (Open Graph): el link muestra imagen y descripción en LinkedIn, WhatsApp o X.
+- **Calidad adaptativa**: si el equipo es lento, el robot desactiva sombras y resolución extra para mantener 60 fps. Las barras de circuito usan un `InstancedMesh` y la textura de la cara se sube a la mitad de resolución.
 - **Robot 3D** (three.js, sin build) cuya cara, aro y LEDs cambian según el peor estado: ojos → ceño amarillo → "!" rojo.
 - **Modo demo**: si la página se abre sin backend (por ejemplo, en GitHub Pages), simula los chequeos en el navegador con las mismas reglas.
 
@@ -49,6 +54,7 @@ Robot + UI ◄── FastAPI (REST + WebSocket)
 | `app/alerts.py` | Notificador de Telegram |
 | `app/inspect.py` | "Pruébalo": revisión de URLs con protección SSRF y límite por IP |
 | `app/badge.py` | Insignias SVG |
+| `web/status.html` | Página de estado pública de cada servicio |
 | `app/main.py` | API REST, WebSocket y sirve `web/` |
 | `web/index.html` | Landing + robot 3D en un solo archivo |
 
@@ -81,6 +87,10 @@ docker run -p 8090:8090 -v vigia-data:/data vigia
 | GET | `/api/services/{id}/checks?limit=500` | Historial desde SQLite |
 | POST | `/api/services/{id}/simulate` | `{"down": true}` simula un incidente |
 | POST | `/api/inspect` | `{"url": "github.com"}` revisa una URL pública |
+| GET | `/api/status/{id}` | Estado, incidentes y MTTR de un servicio |
+| POST | `/api/monitors` | `{"url": "mi-sitio.com"}` crea un monitor de 24 h (devuelve `id` y `token`) |
+| DELETE | `/api/monitors/{id}` | Borra tu monitor (cabecera `X-Monitor-Token`) |
+| GET | `/s/{id}` | Página de estado pública |
 | GET | `/badge/{id}.svg?metric=uptime\|latency\|status` | Insignia SVG en vivo |
 | WS | `/ws` | Mensaje `hello` inicial y luego un evento `check` por chequeo |
 
@@ -100,6 +110,8 @@ Los servicios a vigilar se definen en `targets.json`. `{self}` se reemplaza por 
 | `VIGIA_ALLOW_SIMULATE` | `true` | Permite el botón "Simular incidente" |
 | `VIGIA_INSPECT_LIMIT` | `5` | Revisiones de "Pruébalo" por IP y minuto |
 | `VIGIA_TRUST_PROXY` | `false` | Usar `X-Forwarded-For` (actívalo solo detrás de tu proxy, por ejemplo Render) |
+| `VIGIA_GUEST_TTL_H` | `24` | Horas que dura un monitor de visitante |
+| `VIGIA_GUEST_MAX_PER_IP` / `VIGIA_GUEST_MAX_TOTAL` | `3` / `50` | Límites de monitores de visitantes |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | — | Activan las alertas |
 
 ## Insignias para tu README
@@ -117,7 +129,7 @@ En la sección "En vivo" hay un botón que copia este código ya listo.
 .venv\Scripts\python -m pytest -q
 ```
 
-Hay 61 pruebas: reglas del evaluador, configuración, API, persistencia tras un reinicio, simulación de caída y recuperación, WebSocket, insignias y la protección SSRF (IPs privadas, DNS rebinding, redirecciones hacia la red interna y límite por IP), todo sin depender de la red. GitHub Actions las ejecuta y construye la imagen Docker en cada push.
+Hay 71 pruebas: reglas del evaluador, configuración, API, persistencia tras un reinicio, simulación de caída y recuperación, WebSocket, insignias y la protección SSRF (IPs privadas, DNS rebinding, redirecciones hacia la red interna y límite por IP), monitores de visitantes (privacidad, límites, expiración, borrado con token y persistencia), e incidentes con MTTR, todo sin depender de la red. GitHub Actions las ejecuta y construye la imagen Docker en cada push.
 
 ## Stack
 

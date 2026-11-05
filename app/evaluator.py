@@ -51,6 +51,37 @@ def evaluate(history: Sequence[Check], slow_ms: float) -> tuple[str, int]:
     return UP, failures
 
 
+def incidents(history: Sequence[Check]) -> list[dict]:
+    """Reconstruye las caídas a partir del historial, con la misma regla 2 de 3.
+
+    Una caída empieza en el primer fallo de la ventana que la confirmó y termina
+    en el chequeo que la sacó del estado "down". Devuelve la más reciente primero.
+    """
+    found: list[dict] = []
+    current: dict | None = None
+    for i, c in enumerate(history):
+        window = history[max(0, i - 2):i + 1]
+        fails = sum(1 for x in window if not x.ok)
+        if current is None and fails >= 2:
+            first = next(x for x in window if not x.ok)
+            current = {"start": first.t, "end": None, "error": c.error}
+        elif current is not None and fails < 2:
+            current["end"] = c.t
+            found.append(current)
+            current = None
+    if current is not None:
+        found.append(current)
+    for inc in found:
+        inc["duration_s"] = None if inc["end"] is None else round((inc["end"] - inc["start"]) / 1000)
+    return found[::-1]
+
+
+def mttr(found: Sequence[dict]) -> float | None:
+    """Tiempo medio de recuperación (segundos) de las caídas ya cerradas."""
+    closed = [i["duration_s"] for i in found if i["duration_s"] is not None]
+    return round(sum(closed) / len(closed)) if closed else None
+
+
 def summarize(history: Sequence[Check], slow_ms: float) -> dict:
     status, failures = evaluate(history, slow_ms)
     ok = [c for c in history if c.ok]

@@ -22,6 +22,8 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import httpx
 
+from .evaluator import Check
+
 ALLOWED_PORTS = {80, 443, 8080, 8443}
 MAX_REDIRECTS = 3
 Resolver = Callable[[str, int], Awaitable[list[str]]]
@@ -163,6 +165,21 @@ async def inspect(raw: str, client: httpx.AsyncClient, resolver: Resolver = syst
             return result
     result["error"] = f"Demasiadas redirecciones (más de {MAX_REDIRECTS})"
     return result
+
+
+async def safe_check(url: str, client: httpx.AsyncClient, resolver: Resolver = system_resolve) -> Check:
+    """Un chequeo de monitor con las mismas defensas SSRF que "Pruébalo".
+
+    La IP se valida en CADA chequeo: si mañana el dominio apunta a la red interna,
+    el chequeo falla en lugar de hacer la petición.
+    """
+    t = time.time() * 1000
+    try:
+        r = await inspect(url, client, resolver, measure_connect=False)
+    except Blocked as e:
+        return Check(t=t, ok=False, ms=None, error=str(e)[:200])
+    error = r["error"] or (None if r["ok"] else f"HTTP {r['status']}")
+    return Check(t=t, ok=r["ok"], ms=r["ms"], code=r["status"], error=error)
 
 
 class RateLimiter:

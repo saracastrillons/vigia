@@ -32,6 +32,10 @@ class Settings:
     inspect_limit: int = 5       # revisiones "Pruébalo" por IP...
     inspect_per: float = 60.0    # ...en esta ventana de segundos
     trust_proxy: bool = False    # usar X-Forwarded-For (solo detrás de un proxy propio, p. ej. Render)
+    guest_interval: float = 60.0  # monitores creados por visitantes: cada cuánto se chequean
+    guest_ttl_h: float = 24.0     # ...cuántas horas duran
+    guest_max_per_ip: int = 3     # ...cuántos puede tener cada IP a la vez
+    guest_max_total: int = 50     # ...y cuántos puede haber en total
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -52,6 +56,10 @@ class Settings:
             inspect_limit=int(os.getenv("VIGIA_INSPECT_LIMIT", 5)),
             inspect_per=float(os.getenv("VIGIA_INSPECT_PER", 60)),
             trust_proxy=_env_bool("VIGIA_TRUST_PROXY", False),
+            guest_interval=float(os.getenv("VIGIA_GUEST_INTERVAL", 60)),
+            guest_ttl_h=float(os.getenv("VIGIA_GUEST_TTL_H", 24)),
+            guest_max_per_ip=int(os.getenv("VIGIA_GUEST_MAX_PER_IP", 3)),
+            guest_max_total=int(os.getenv("VIGIA_GUEST_MAX_TOTAL", 50)),
         )
 
 

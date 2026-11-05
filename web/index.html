@@ -45,6 +45,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 ul{list-style:none}
 .mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
 ::selection{background:var(--ink);color:var(--bg)}
+:focus-visible{outline:2px solid var(--g3);outline-offset:2px}
 
 /* ---------- fixed chrome ---------- */
 .guides{position:fixed;inset:0;z-index:0;pointer-events:none}
@@ -52,7 +53,7 @@ ul{list-style:none}
 .guides i:nth-child(1){left:var(--col)}
 .guides i:nth-child(2){left:50%}
 .guides i:nth-child(3){left:calc(100% - var(--col))}
-#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none;opacity:0;transition:opacity .8s ease}
 #gl.on{opacity:1}
 
 .topbar{position:fixed;top:0;left:0;right:0;height:30px;z-index:40;background:var(--ink);color:#efece6;
@@ -69,7 +70,7 @@ nav{position:fixed;top:30px;left:0;right:0;height:52px;z-index:35;display:grid;g
 body.tb-off nav{top:0}
 .logo{display:flex;align-items:center;gap:10px;padding-left:22px;font:500 18px var(--sans);letter-spacing:.02em}
 .logo svg{width:27px;height:27px;flex:none}
-.menu{display:flex;align-items:center;gap:30px;padding-left:30px;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.menu{display:flex;align-items:center;gap:clamp(14px,2.1vw,30px);padding-left:clamp(14px,2.1vw,30px);white-space:nowrap;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
 .menu a{transition:opacity .2s}
 .menu a:hover{opacity:.5}
 .pad{display:flex;align-items:center;justify-content:center;gap:9px;border-left:1px solid var(--hair);border-right:1px solid var(--hair);
@@ -102,6 +103,8 @@ body.tb-off nav{top:0}
 .rail .rpop a{font:400 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--bg);padding:3px 6px;border:1px solid var(--hair)}
 .rail .rpop a:hover{background:var(--ink);color:var(--bg)}
 
+.toast{pointer-events:auto}
+.toast a{text-decoration:underline;text-underline-offset:3px}
 .toasts{position:fixed;top:98px;right:calc(var(--col) + 18px);z-index:34;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
 .toast{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--bg);border:1px solid var(--ink);
   font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;animation:tin .5s cubic-bezier(.2,.7,.2,1) both}
@@ -128,7 +131,7 @@ h2{font-weight:400;letter-spacing:-.02em}
 /* ---------- 1 · intro ---------- */
 .prompt{position:absolute;left:var(--col);top:30%;width:24.4%}
 .prompt .tab{width:42px;height:42px;border:1px solid var(--ink);border-bottom:0;display:grid;place-items:center;font:500 14px var(--mono);background:var(--bg)}
-.prompt .box{position:relative;border:1px solid var(--ink);padding:14px 16px 13px;min-height:92px;font:400 11px/1.45 var(--mono);background:rgba(239,236,230,.6)}
+.prompt .box{position:relative;border:1px solid var(--ink);padding:14px 16px 13px;min-height:92px;font:400 11px/1.45 var(--mono);background:rgba(239,236,230,.88)}
 .prompt .ps{color:var(--dim)}
 .prompt .out{margin-top:8px;color:var(--ok);min-height:16px;transition:opacity .2s}
 .prompt .out.err{color:var(--down)}
@@ -164,10 +167,10 @@ h2{font-weight:400;letter-spacing:-.02em}
 .tabx.on{color:var(--ink)}
 .tabx.on .fr{opacity:1}
 .tabx.past{opacity:0}
-.tdesc{position:absolute;left:var(--col);top:calc(82px + 7vh + 74px + 30px);width:25%;padding-left:16px;border-left:1px solid var(--ink);
+.tdesc{position:absolute;left:var(--col);top:calc(82px + 7vh + 74px + 30px);width:25%;padding:6px 10px 6px 16px;border-left:1px solid var(--ink);background:rgba(239,236,230,.82);
   font:400 13.5px/1.5 var(--sans);transition:opacity .35s}
 .tdesc.out{opacity:0}
-.specs{position:absolute;right:var(--col);top:calc(82px + 7vh + 74px + 30px);width:23%;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.specs{position:absolute;right:var(--col);top:calc(82px + 7vh + 74px + 30px);width:23%;background:rgba(239,236,230,.82);font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
 .specs div{display:flex;justify-content:space-between;height:23px;align-items:center;border-bottom:1px solid var(--hair)}
 .specs div:first-child{border-top:1px solid var(--hair)}
 .specs dt{color:var(--dim)}
@@ -239,7 +242,8 @@ h2{font-weight:400;letter-spacing:-.02em}
 .ghost span{display:block;margin-top:14px;font:400 clamp(26px,2.6vw,46px)/1 var(--sans);letter-spacing:-.03em}
 
 /* ---------- 5 · pruébalo ---------- */
-.probe{position:absolute;left:var(--col);top:calc(82px + 5vh);width:44%;display:flex;flex-direction:column;gap:2vh}
+#probar,#proyecto{height:auto;min-height:100vh}
+.probe{position:relative;margin-left:var(--col);width:44%;padding:calc(82px + 5vh) 0 8vh;display:flex;flex-direction:column;gap:2vh}
 .probe .lab{font-size:11px;display:flex;gap:10px;align-items:center}
 .probe .lab::before{content:'';width:18px;height:1px;background:var(--ink)}
 .probe h2{font-size:clamp(30px,3.05vw,54px);line-height:1.02}
@@ -278,6 +282,52 @@ footer .mono{font-size:11px;text-align:center;line-height:2}
 footer a{border-bottom:1px solid var(--hair)}
 
 /* ---------- mobile ---------- */
+/* ---------- monitores propios ---------- */
+.watch{margin-top:16px;padding-top:14px;border-top:1px solid var(--hair);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.watch button{height:40px;padding:0 18px;background:var(--ink);color:var(--bg);font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;transition:opacity .2s}
+.watch button:hover{opacity:.85}
+.watch button:disabled{opacity:.45;cursor:default}
+.watch small{font:400 10.5px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+.mons h3{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.mons h3::before{content:'';width:18px;height:1px;background:var(--ink)}
+.mon{display:grid;grid-template-columns:14px 1fr auto auto auto;gap:14px;align-items:center;height:48px;padding:0 6px 0 14px;border:1px solid var(--hair);background:rgba(239,236,230,.92);margin-top:-1px;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.04em}
+.mon b{font:500 14px var(--sans);text-transform:none;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mon a{border-bottom:1px solid var(--ink)}
+.mon .m{color:var(--dim)}
+.mon .x{color:var(--dim);font-size:16px;width:32px;height:32px}
+.mon .x:hover{color:var(--down)}
+
+/* ---------- 6 · proyecto ---------- */
+.about{position:relative;margin-left:var(--col);width:46%;padding:calc(82px + 6vh) 0 10vh;display:flex;flex-direction:column;gap:3vh}
+.about .lab{font-size:11px;display:flex;gap:10px;align-items:center}
+.about .lab::before{content:'';width:18px;height:1px;background:var(--ink)}
+.about h2{font-size:clamp(30px,3.05vw,54px);line-height:1.02}
+.about h2 em{font-style:normal;color:var(--dim)}
+.about .lead{font-size:15px;line-height:1.55;max-width:60ch}
+.cards{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--hair);border-left:1px solid var(--hair)}
+.card{padding:16px 18px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);background:rgba(239,236,230,.92)}
+.card .n{font:400 10.5px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.card h3{font:500 16px var(--sans);margin:8px 0 6px}
+.card p{font-size:13px;line-height:1.5;color:rgba(20,20,20,.75)}
+.facts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.facts span{font:400 10.5px var(--mono);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;border:1px solid var(--hair);background:var(--bg)}
+.facts img{height:20px;display:block}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-flex;align-items:center;height:42px;padding:0 18px;border:1px solid var(--ink);background:var(--bg);font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;transition:background .2s,color .2s}
+.links a:hover{background:var(--ink);color:var(--bg)}
+.links a.pri{background:var(--ink);color:var(--bg)}
+.links a.pri:hover{opacity:.85}
+.author{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid var(--hair)}
+.author .av{width:48px;height:48px;font-size:20px}
+.author b{display:block;font:500 16px var(--sans)}
+.author span{font:400 11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.author .al{margin-left:auto;display:flex;gap:16px;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.author .al a{border-bottom:1px solid var(--ink)}
+
+/* pantallas medianas (laptops pequeñas): menos elementos alrededor del robot */
+@media (max-width:1200px){
+  .rail,.features,.rule-a,.ghost,.menu .gh{display:none}
+}
 @media (max-width:900px){
   :root{--col:16px}
   .guides i:nth-child(1),.guides i:nth-child(3),.menu,.pad,.rail,.features,.ghost,.specs,.rule-a{display:none}
@@ -305,7 +355,12 @@ footer a{border-bottom:1px solid var(--hair)}
   .av{width:44px;height:44px;font-size:19px}
   .panel{left:16px;right:16px;width:auto;padding:12px}
   .arrows{left:16px;bottom:4%}
-  .probe{left:16px;right:16px;width:auto;top:calc(82px + 2vh);padding:12px;background:var(--paper)}
+  .probe,.about{margin:0 16px;width:auto;padding:calc(82px + 2vh) 12px 6vh;background:var(--paper)}
+  .cards{grid-template-columns:1fr}
+  .author{flex-wrap:wrap}
+  .author .al{margin-left:0}
+  .mon{grid-template-columns:14px 1fr auto auto;gap:10px}
+  .mon .m{display:none}
   .pform button{padding:0 14px}
   .wf{grid-template-columns:70px 1fr 56px}
 }
@@ -327,7 +382,7 @@ footer a{border-bottom:1px solid var(--hair)}
 <canvas id="gl" aria-hidden="true"></canvas>
 
 <div class="topbar">
-  <a href="#arquitectura"><b>Nuevo:</b> VIGÍA v1 ya está aquí · monitoreo autoalojado para tus servicios ↗</a>
+  <a href="#probar"><b>Nuevo:</b> vigila tu propio sitio gratis durante 24 h ↗</a>
   <button class="x" aria-label="Cerrar aviso">×</button>
 </div>
 
@@ -345,10 +400,11 @@ footer a{border-bottom:1px solid var(--hair)}
     <a href="#arquitectura">Arquitectura</a>
     <a href="#vivo">En vivo</a>
     <a href="#probar">Pruébalo</a>
-    <a href="https://github.com/saracastrillons" target="_blank" rel="noopener">GitHub ↗</a>
+    <a href="#proyecto">Proyecto</a>
+    <a class="gh" href="https://github.com/saracastrillons/vigia" target="_blank" rel="noopener">GitHub ↗</a>
   </div>
   <div class="pad"><i class="dot unknown" id="navDot"></i><span id="navChip">Conectando…</span></div>
-  <div class="cta-cell"><a class="cta" href="#vivo"><span class="ey">••</span>Abrir consola</a></div>
+  <div class="cta-cell"><a class="cta" href="#probar"><span class="ey">••</span>Pruébalo gratis</a></div>
 </nav>
 
 <aside class="rail" aria-label="Secciones">
@@ -359,7 +415,7 @@ footer a{border-bottom:1px solid var(--hair)}
   </div>
   <button class="rmenu" id="railMenu" aria-expanded="false">≡ Menu</button>
   <div class="rpop" id="railPop">
-    <a href="#intro">Intro</a><a href="#producto">Producto</a><a href="#arquitectura">Arquitectura</a><a href="#vivo">En vivo</a><a href="#probar">Pruébalo</a>
+    <a href="#intro">Intro</a><a href="#producto">Producto</a><a href="#arquitectura">Arquitectura</a><a href="#vivo">En vivo</a><a href="#probar">Pruébalo</a><a href="#proyecto">Proyecto</a>
   </div>
 </aside>
 
@@ -441,6 +497,7 @@ footer a{border-bottom:1px solid var(--hair)}
         <button id="simBtn">Simular incidente <span>(Click aquí)</span></button>
         <small class="mono" id="simNote"></small>
         <button class="badge-btn" id="badgeBtn" hidden>⧉ Copiar insignia de uptime para tu README</button>
+        <a class="badge-btn" id="statusLink" href="#" target="_blank" rel="noopener" hidden>↗ Ver página de estado pública</a>
       </div>
     </div>
     <div class="arrows rv d3">
@@ -472,13 +529,43 @@ footer a{border-bottom:1px solid var(--hair)}
       <div class="presult rv d3" id="presult">
         <p class="empty">Escribe un dominio o elige un ejemplo. VIGÍA resuelve el DNS, comprueba que la IP sea pública, se conecta a esa misma IP y mide cada fase de la conexión.</p>
       </div>
-      <div class="pnote mono rv d3">Protegido contra SSRF y DNS rebinding · solo IPs públicas · 5 revisiones por minuto</div>
+      <div class="pnote mono rv d3">Protegido contra SSRF y DNS rebinding · solo IPs públicas · 5 revisiones por minuto · monitores gratis por 24 h</div>
+      <div class="mons" id="mons" hidden><h3>Tus monitores · 24 h</h3><div id="monList"></div></div>
+    </div>
+  </section>
+
+  <!-- 6 · PROYECTO -->
+  <section id="proyecto" data-label="PROYECTO">
+    <div class="about">
+      <div class="lab mono rv d1">Sobre el proyecto</div>
+      <h2 class="rv d1">La ingeniería <em>detrás de la vitrina</em></h2>
+      <p class="lead rv d2">VIGÍA es un monitor de servicios completo: un backend asíncrono en Python que hace chequeos reales, guarda series de tiempo y transmite eventos en vivo, y un frontend sin frameworks donde un robot 3D refleja el estado del sistema. Estas son las decisiones que más pesan:</p>
+      <div class="cards rv d2">
+        <div class="card"><span class="n">01 · Confiabilidad</span><h3>Regla 2 de 3 con histéresis</h3><p>Un timeout aislado no es una caída: se confirma con 2 de 3 fallos, se re-chequea en 3 s y la recuperación exige lo mismo.</p></div>
+        <div class="card"><span class="n">02 · Seguridad</span><h3>SSRF y DNS rebinding</h3><p>Cualquiera puede pedirle peticiones al servidor, así que cada IP se valida, la conexión se fija a esa IP y cada redirección se revisa.</p></div>
+        <div class="card"><span class="n">03 · Concurrencia</span><h3>asyncio con backpressure</h3><p>Un bucle por servicio, chequeos concurrentes con httpx y colas acotadas: un cliente WebSocket lento nunca frena el monitor.</p></div>
+        <div class="card"><span class="n">04 · Calidad</span><h3>Pruebas sin red, en CI</h3><p>DNS falso, transporte HTTP simulado y SQLite temporal: más de 70 pruebas cubren ataques, caídas y reinicios en segundos.</p></div>
+      </div>
+      <div class="facts rv d3">
+        <img src="https://github.com/saracastrillons/vigia/actions/workflows/ci.yml/badge.svg" alt="Estado del CI en GitHub Actions" loading="lazy">
+        <span>Python · FastAPI</span><span>asyncio · httpx</span><span>SQLite</span><span>WebSocket</span><span>three.js</span><span>Docker</span><span>GitHub Actions</span>
+      </div>
+      <div class="links rv d3">
+        <a class="pri" href="https://github.com/saracastrillons/vigia" target="_blank" rel="noopener">Ver el código ↗</a>
+        <a href="/docs" target="_blank" rel="noopener">API interactiva ↗</a>
+        <a href="https://github.com/saracastrillons/vigia#readme" target="_blank" rel="noopener">Documentación ↗</a>
+      </div>
+      <div class="author rv d4">
+        <div class="av" aria-hidden="true">S</div>
+        <div><b>Sara Castrillón</b><span>Estudiante de Ingeniería de Sistemas</span></div>
+        <div class="al" id="authorLinks"><a href="https://github.com/saracastrillons" target="_blank" rel="noopener">GitHub ↗</a></div>
+      </div>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="mono">VIGÍA · 2026<br><span style="color:var(--dim)">Diseñado y construido por Sara Castrillón</span></div>
+  <div class="mono">VIGÍA · 2026 · Código abierto<br><span style="color:var(--dim)">Diseñado y construido por Sara Castrillón</span></div>
 </footer>
 
 <!-- ====================== UI + datos ====================== -->
@@ -492,6 +579,12 @@ const NS = 'http://www.w3.org/2000/svg';
 // Estado compartido con el módulo del robot
 const V = window.vigia = { status: 'unknown', sections: $$('main section') };
 if (new URLSearchParams(location.search).has('og')) document.body.classList.add('og');
+$('#intro').classList.add('in');   // la intro se muestra de inmediato, sin esperar al observer
+
+// Enlaces de contacto opcionales: rellénalos y aparecerán en la sección Proyecto
+const AUTHOR = { linkedin: '', email: '' };
+if (AUTHOR.linkedin) $('#authorLinks').insertAdjacentHTML('beforeend', `<a href="${AUTHOR.linkedin}" target="_blank" rel="noopener">LinkedIn ↗</a>`);
+if (AUTHOR.email) $('#authorLinks').insertAdjacentHTML('beforeend', `<a href="mailto:${AUTHOR.email}">Correo ↗</a>`);
 
 /* ---------- chrome ---------- */
 let tbClosed = false;
@@ -503,7 +596,7 @@ const reveal = new IntersectionObserver(es => es.forEach(e => {
 }), { threshold: .15 });
 V.sections.forEach(s => reveal.observe(s));
 
-const RAIL = { 'INTRO': [0, 0], 'PRODUCTO': [16, 72], 'ARQUITECTURA': [32, 144], 'EN VIVO': [48, 216], 'PRUÉBALO': [64, 288] };
+const RAIL = { 'INTRO': [0, 0], 'PRODUCTO': [13, 60], 'ARQUITECTURA': [26, 120], 'EN VIVO': [39, 180], 'PRUÉBALO': [52, 240], 'PROYECTO': [65, 300] };
 const railTag = $('#railTag'), railLbl = $('#railLbl');
 const spy = new IntersectionObserver(es => es.forEach(e => {
   if (!e.isIntersecting || e.intersectionRatio < .5) return;
@@ -822,6 +915,8 @@ function renderPanel(fadeIn = false) {
     : 'Fuerza fallos en este servicio y mira cómo reacciona el robot';
   $('#ghost').innerHTML = `<b>${nx.name}</b><span>${fmtUp(nx.uptime)}%</span>`;
   $('#badgeBtn').hidden = S.mode === 'demo';
+  $('#statusLink').hidden = S.mode === 'demo';
+  $('#statusLink').href = `/s/${encodeURIComponent(s.id)}`;
 }
 function renderAgo() {
   const s = S.services[S.sel];
@@ -887,7 +982,7 @@ function onCheck(s, c, prev) {
   else $('#ghost').innerHTML = `<b>${S.services[(S.sel + 1) % S.services.length].name}</b><span>${fmtUp(S.services[(S.sel + 1) % S.services.length].uptime)}%</span>`;
 }
 
-function renderAll() { setMode(); renderSpecs(); renderGlobal(); renderPanel(true); }
+function renderAll() { setMode(); renderSpecs(); renderGlobal(); renderPanel(true); renderMons(); }
 
 /* ---------- controles del panel ---------- */
 const swapEls = ['#pbody', '#av', '#nm', '#srvRole', '#ghost'].map(q => $(q));
@@ -956,7 +1051,9 @@ function renderProbe(j) {
       <div><dt>Servidor</dt><dd title="${esc(j.server)}">${esc(j.server || '—')}</dd></div>
       <div><dt>TLS</dt><dd title="${tls}">${tls}</dd></div>
       <div><dt>Cert. vence</dt><dd>${cert}</dd></div>
-    </dl>`);
+    </dl>
+    <div class="watch"><button id="watchBtn">Vigilar este sitio 24 h →</button><small>Gratis · página de estado pública + insignia</small></div>`);
+  $('#watchBtn').onclick = e => watchSite(j.final_url || j.url, e.currentTarget);
   requestAnimationFrame(() => requestAnimationFrame(() => $$('.wf i', pres).forEach(i => { i.style.width = i.dataset.w + '%'; })));
 }
 async function runProbe(raw) {
@@ -988,6 +1085,61 @@ async function runProbe(raw) {
     pgo.disabled = false;
   }
 }
+/* ---------- monitores propios (24 h) ---------- */
+const MKEY = 'vigia.monitors';
+function loadMons() {
+  try { return JSON.parse(localStorage.getItem(MKEY) || '[]').filter(m => m.expires > Date.now()); } catch { return []; }
+}
+function saveMons(list) { try { localStorage.setItem(MKEY, JSON.stringify(list)); } catch {} }
+async function watchSite(url, btn) {
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/monitors', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      toast(`<i class="dot down"></i>${esc(typeof j.detail === 'string' ? j.detail : 'No se pudo crear el monitor')}`, 5000);
+      btn.disabled = false;
+      return;
+    }
+    saveMons([...loadMons(), { id: j.id, token: j.token, name: j.name, url: j.url, expires: j.expires }]);
+    btn.textContent = 'Vigilando ✓';
+    toast(`<i class="dot up"></i>Vigilando ${esc(j.name)} · <a href="/s/${esc(j.id)}" target="_blank" rel="noopener">ver su página</a>`, 6000);
+    react('happy', 2500);
+    renderMons();
+  } catch {
+    btn.disabled = false;
+    toast('<i class="dot down"></i>No se pudo contactar al backend');
+  }
+}
+async function renderMons() {
+  const box = $('#mons'), list = loadMons();
+  if (S.mode === 'demo' || !list.length) { box.hidden = true; return; }
+  const rows = await Promise.all(list.map(async m => {
+    try {
+      const r = await fetch(`/api/status/${encodeURIComponent(m.id)}`, { cache: 'no-store' });
+      return r.status === 404 ? { m, gone: true } : { m, d: r.ok ? await r.json() : null };
+    } catch { return { m }; }
+  }));
+  const alive = rows.filter(x => !x.gone);
+  saveMons(alive.map(x => x.m));
+  box.hidden = !alive.length;
+  $('#monList').innerHTML = alive.map(({ m, d }) => `
+    <div class="mon"><i class="dot ${d?.status || 'unknown'}"></i><b title="${esc(m.url)}">${esc(m.name)}</b>
+    <span class="m">${d && d.uptime != null ? fmtUp(d.uptime) + '% · ' + fmtMs(d.p50) : 'esperando…'}</span>
+    <a href="/s/${esc(m.id)}" target="_blank" rel="noopener">Estado ↗</a>
+    <button class="x" data-id="${esc(m.id)}" aria-label="Eliminar ${esc(m.name)}">×</button></div>`).join('');
+  $$('#monList .x').forEach(b => {
+    b.onclick = async () => {
+      const m = loadMons().find(x => x.id === b.dataset.id);
+      if (!m || !confirm(`¿Dejar de vigilar ${m.name}?`)) return;
+      await fetch(`/api/monitors/${encodeURIComponent(m.id)}`, { method: 'DELETE', headers: { 'x-monitor-token': m.token } }).catch(() => {});
+      saveMons(loadMons().filter(x => x.id !== m.id));
+      renderMons();
+    };
+  });
+}
+setInterval(() => { if (!document.hidden) renderMons(); }, 15000);
+
 $('#pform').addEventListener('submit', e => { e.preventDefault(); runProbe(purl.value); });
 $$('#chips button').forEach(b => { b.onclick = () => { purl.value = b.dataset.u; runProbe(b.dataset.u); }; });
 
@@ -1084,7 +1236,7 @@ function paintRing() {
 paintRing();
 
 const faceCv = document.createElement('canvas');
-faceCv.width = faceCv.height = 512;
+faceCv.width = faceCv.height = 256;   // se dibuja en coordenadas de 512 escaladas a la mitad: 4 veces menos datos por frame
 const fx = faceCv.getContext('2d');
 const faceTex = new THREE.CanvasTexture(faceCv);
 faceTex.colorSpace = THREE.SRGBColorSpace;
@@ -1097,7 +1249,7 @@ const dark = new THREE.MeshStandardMaterial({ color: 0x1b1b1f, roughness: .55, m
 const deep = new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: .6, metalness: .2, envMapIntensity: ENV });
 const pedMat = new THREE.MeshStandardMaterial({ color: 0x2a2928, roughness: .9, envMapIntensity: ENV });
 const ringMat = new THREE.MeshPhysicalMaterial({ map: ringTex, emissiveMap: ringTex, emissive: 0xffffff, emissiveIntensity: .22, roughness: .5, clearcoat: .35, envMapIntensity: ENV });
-const screenMat = new THREE.MeshPhysicalMaterial({ color: 0x050507, roughness: .15, clearcoat: 1, clearcoatRoughness: .05, emissive: 0xffffff, emissiveMap: faceTex, emissiveIntensity: 1.6, envMapIntensity: .45 });
+const screenMat = new THREE.MeshPhysicalMaterial({ color: 0x050507, roughness: .3, clearcoat: .5, clearcoatRoughness: .2, emissive: 0xffffff, emissiveMap: faceTex, emissiveIntensity: 1.6, envMapIntensity: .12 });
 
 /* ---------- helpers de geometría ---------- */
 function mesh(geo, mat, x = 0, y = 0, z = 0) {
@@ -1144,9 +1296,10 @@ head.rotation.order = 'YXZ';
 body.add(head);
 head.add(mesh(rbox(1.5, 1.42, 1.3, .2, 5), shell, 0, .78, 0));
 head.add(mesh(rbox(1.28, 1.14, .9, .16), deep, 0, .78, -.42));
-const bar = new THREE.BoxGeometry(1, 1, 1);
+// las 26 barras de "circuito" van en un solo InstancedMesh: 1 llamada de dibujo en vez de 26
+const circuits = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), dark, 26);
+const b = new THREE.Object3D();
 for (let i = 0; i < 26; i++) {
-  const b = new THREE.Mesh(bar, dark);
   if (i % 4 === 0) {
     b.scale.set(.04 + rnd() * .16, .03, .035);
     b.position.set((rnd() - .5) * 1.0, .78 + .585, -.7 - rnd() * .14);
@@ -1157,8 +1310,10 @@ for (let i = 0; i < 26; i++) {
     b.scale.set(.035, .06 + rnd() * .2, .03);
     b.position.set((rnd() - .5) * 1.0, .78 + (rnd() - .5) * .9, -.885);
   }
-  head.add(b);
+  b.updateMatrix();
+  circuits.setMatrixAt(i, b.matrix);
 }
+head.add(circuits);
 head.add(mesh(frameGeo(1.5, 1.44, .3, 1.08, 1.02, .2, .1, .03), ringMat, 0, .78, .6));
 head.add(mesh(frameGeo(1.12, 1.06, .22, .94, .88, .15, .04, .01), shellLight, 0, .78, .62));
 const screen = mesh(remapUV(new THREE.ShapeGeometry(rr(.9, .84, .12, new THREE.Shape()), 12), .9, .84), screenMat, 0, .78, .665);
@@ -1229,6 +1384,34 @@ for (const side of [-1, 1]) {
 const ped = mesh(rbox(1.7, 1.6, 1.7, .03, 2), pedMat, 0, -2.22, 0);
 ped.castShadow = false;
 scene.add(ped);
+
+// sombra de contacto barata: se refuerza si el equipo es lento y se apagan las sombras reales
+const blobCv = document.createElement('canvas');
+blobCv.width = blobCv.height = 128;
+const bctx = blobCv.getContext('2d'), bg = bctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+bg.addColorStop(0, 'rgba(0,0,0,.85)'); bg.addColorStop(1, 'rgba(0,0,0,0)');
+bctx.fillStyle = bg; bctx.fillRect(0, 0, 128, 128);
+const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.2),
+  new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(blobCv), transparent: true, depthWrite: false, opacity: .18 }));
+blob.rotation.x = -Math.PI / 2;
+blob.position.set(0, -1.415, .05);
+scene.add(blob);
+
+// calidad adaptativa: si los primeros frames van lentos, se quitan sombras y resolución extra
+let perfN = 0, perfSum = 0, lastT = 0, lowPower = false;
+function watchPerf(t) {
+  const dt = t - lastT;
+  lastT = t;
+  if (lowPower || perfN >= 120 || document.hidden || dt > .25) return;
+  if (++perfN > 30) perfSum += dt;
+  if (perfN === 120 && perfSum / 90 > 1 / 45) {
+    lowPower = true;
+    renderer.shadowMap.enabled = false;
+    scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+    renderer.setPixelRatio(1);
+    blob.material.opacity = .45;
+  }
+}
 
 /* ---------- cara ---------- */
 let faceMode = 'eyes', faceA = 1, blinkAt = -1, nextBlink = 2;
@@ -1307,6 +1490,7 @@ function blockFace(t) {
   fx.beginPath(); fx.moveTo(173, 173); fx.lineTo(339, 339); fx.stroke();
 }
 function drawFace(t, st, mode, ptr) {
+  fx.setTransform(.5, 0, 0, .5, 0, 0);
   fx.globalAlpha = 1; fx.shadowBlur = 0;
   fx.fillStyle = '#000'; fx.fillRect(0, 0, 512, 512);
   fx.globalAlpha = faceA;
@@ -1328,6 +1512,7 @@ const S = [
   { cz: 10.4, cy: 1.3, cx: -2.6, ly: .7, lx: -2.6, by: -.78, hy: -.42, hp: .1, hr: .1 },
   { cz: 6.9, cy: 1.95, cx: -.9, ly: 1.72, lx: -.9, by: -.2, hy: -.12, hp: .04, hr: 0 },
   { cz: 9.4, cy: 1.5, cx: -2.3, ly: 1.0, lx: -2.3, by: -.62, hy: -.3, hp: .08, hr: .06 },
+  { cz: 10.6, cy: 1.25, cx: -2.5, ly: .65, lx: -2.5, by: -.45, hy: -.28, hp: .1, hr: .06 },
 ];
 const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 function blend(p) {
@@ -1357,7 +1542,7 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight, false);
 });
 
-let sp = scrollP(), lastSt = 'up', alertK = 0, degK = 0, lastR = null, happyK = 0, scanK = 0;
+let sp = scrollP(), lastSt = 'up', alertK = 0, degK = 0, lastR = null, happyK = 0, scanK = 0, waveK = 0;
 const fillTarget = new THREE.Color(FILL.up);
 const clock = new THREE.Clock();
 function frame() {
@@ -1388,7 +1573,9 @@ function frame() {
   sptr.x += (ptr.x - sptr.x) * .06;
   sptr.y += (ptr.y - sptr.y) * .06;
   const mobile = innerWidth <= 900, s = blend(sp);
-  const cx = mobile ? 0 : s.cx, lx = mobile ? 0 : s.lx, cz = s.cz * (mobile ? 1.25 : 1);
+  // en pantallas menos panorámicas la cámara se aleja para que el robot no tape el texto
+  const fit = mobile ? 1.25 : Math.min(1.45, Math.max(1, 1.62 / camera.aspect));
+  const cx = mobile ? 0 : s.cx, lx = mobile ? 0 : s.lx, cz = s.cz * fit;
   camera.position.set(cx + sptr.x * .25, s.cy - sptr.y * .1, cz);
   camera.lookAt(lx, s.ly, 0);
 
@@ -1397,10 +1584,13 @@ function frame() {
   head.rotation.y = s.hy + sptr.x * .45 + Math.sin(t * 22) * .06 * alertK + (Math.sin(t * 2.2) * .12 - .1) * scanK;
   head.rotation.x = s.hp - sptr.y * .18 + Math.sin(.9 * t) * .02 + degK * .08;
   head.rotation.z = s.hr + Math.sin(.7 * t) * .02;
+  waveK += ((sp > 4.55 && !R ? 1 : 0) - waveK) * .06;   // saluda en la sección Proyecto
   for (const a of arms) {
+    const wave = a.side === 1 ? waveK : 0;
     a.sh.rotation.x = Math.sin(1.4 * t + a.side) * .05;
-    a.sh.rotation.z = a.side * (.16 + (1.15 + Math.sin(t * 9 + a.side) * .15) * happyK);
+    a.sh.rotation.z = a.side * (.16 + (1.15 + Math.sin(t * 9 + a.side) * .15) * happyK + 2.3 * wave);
     a.fa.rotation.x = -.35 + Math.sin(1.4 * t + a.side) * .06 - (st === 'down' ? .5 * alertK : 0);
+    a.fa.rotation.z = Math.sin(t * 7) * .55 * wave;
   }
 
   const ledCols = st === 'down' ? [0xff3d5a, 0xff3d5a, 0xff3d5a] : st === 'degraded' ? [0xffb347, 0xffb347, 0xffb347] : [0x2ee6a6, 0x20c3ff, 0x4f7cff];
@@ -1415,6 +1605,7 @@ function frame() {
   faceA = Math.min(1, faceA + .05);
   drawFace(t, st, faceMode, sptr);
 
+  watchPerf(t);
   renderer.render(scene, camera);
   canvas.classList.add('on');
 }

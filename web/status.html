@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estado · VIGÍA</title>
+<meta name="description" content="Página de estado en vivo generada por VIGÍA: uptime, latencia e incidentes.">
+<meta name="theme-color" content="#efece6">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Página de estado · VIGÍA">
+<meta property="og:description" content="Uptime, latencia e incidentes en vivo, vigilados por VIGÍA.">
+<meta property="og:image" content="__ORIGIN__/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 27'%3E%3Crect width='27' height='27' rx='6' fill='%23efece6'/%3E%3Cpath d='M23.5 8.5V8A4.5 4.5 0 0 0 19 3.5H8A4.5 4.5 0 0 0 3.5 8v11A4.5 4.5 0 0 0 8 23.5h11a4.5 4.5 0 0 0 4.5-4.5v-.5' fill='none' stroke='%2320c3ff' stroke-width='2.4'/%3E%3Ccircle cx='10.5' cy='13.5' r='1.8' fill='%23141414'/%3E%3Ccircle cx='16' cy='13' r='1.8' fill='%23141414'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#efece6;--ink:#141414;--dim:rgba(20,20,20,.5);--faint:rgba(20,20,20,.14);--line:rgba(20,20,20,.09);--hair:rgba(20,20,20,.18);
+  --ok:#0fa968;--warn:#e8890c;--down:#e5383b;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;--sans:'Schibsted Grotesk',system-ui,sans-serif;
+  --lgrad:linear-gradient(90deg,#2ee6a6,#20c3ff,#4f7cff);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header.top{height:56px;border-bottom:1px solid var(--hair);background:rgba(239,236,230,.9);position:sticky;top:0;z-index:5;backdrop-filter:blur(8px)}
+header.top .wrap{height:100%;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:10px;font:500 17px var(--sans);text-decoration:none}
+.logo svg{width:24px;height:24px}
+header.top .sep{color:var(--dim);font-size:11px}
+header.top .back{margin-left:auto;font-size:11px;text-decoration:none;border:1px solid var(--hair);padding:7px 12px}
+header.top .back:hover{background:var(--ink);color:var(--bg)}
+
+.hero{display:grid;grid-template-columns:1fr 168px;gap:32px;align-items:center;padding:44px 0 28px;border-bottom:1px solid var(--hair)}
+.kicker{font-size:11px;color:var(--dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h1{font:400 clamp(34px,5vw,60px)/1.02 var(--sans);letter-spacing:-.03em;margin-top:10px;word-break:break-word}
+.url{font:400 13px var(--mono);color:var(--dim);margin-top:10px;word-break:break-all}
+.url a{color:inherit}
+.verdict{display:inline-flex;align-items:center;gap:10px;margin-top:18px;padding:8px 14px;border:1px solid var(--ink);font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.face{width:168px;height:168px;border-radius:30px;padding:12px;background:conic-gradient(from 200deg,#9be15d,#2ee6a6 18%,#20c3ff 34%,#4f7cff 50%,#20c3ff 66%,#2ee6a6 82%,#9be15d);transition:filter .6s}
+.face.degraded{filter:hue-rotate(185deg) saturate(1.3)}
+.face.down{filter:hue-rotate(140deg) saturate(1.6) brightness(1.05)}
+.face canvas{width:100%;height:100%;border-radius:20px;background:#000;display:block;border:6px solid #f8f6f2}
+
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.dot.degraded{background:var(--warn)}.dot.down{background:var(--down)}.dot.unknown{background:var(--faint)}
+
+.stats{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--hair)}
+.stat{padding:18px 16px 18px 0}
+.stat+.stat{padding-left:16px;border-left:1px solid var(--hair)}
+.stat dt{font:400 10.5px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.stat dd{font:400 26px/1.1 var(--sans);letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
+
+section.blk{padding:28px 0;border-bottom:1px solid var(--hair)}
+.blk h2{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.blk h2::before{content:'';width:18px;height:1px;background:var(--ink)}
+.blk h2 small{margin-left:auto;font-weight:400;color:var(--dim)}
+.chart{position:relative}
+#chart{display:block;width:100%;height:200px;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:400 11px var(--mono);padding:6px 9px;white-space:nowrap;transform:translate(-50%,-120%);opacity:0;transition:opacity .15s}
+.strip{display:flex;gap:2px;height:34px;align-items:stretch}
+.strip i{flex:1;background:var(--ok);opacity:.85;border-radius:1px;min-width:2px}
+.strip i.f{background:var(--down)}.strip i.s{background:var(--warn)}.strip i.e{background:var(--line);opacity:1}
+.strip i:hover{opacity:1;outline:1px solid var(--ink)}
+.legend{display:flex;justify-content:space-between;font:400 10.5px var(--mono);color:var(--dim);margin-top:8px;text-transform:uppercase}
+.incs{list-style:none;border-top:1px solid var(--hair)}
+.incs li{display:grid;grid-template-columns:20px 1.4fr 1fr 2fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--hair);font-size:14px}
+.incs .when{font:400 12px var(--mono)}
+.incs .dur{font:400 12px var(--mono);color:var(--dim)}
+.incs .err{font:400 12px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.incs li.empty{display:block}
+.empty{font:400 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.04em;padding:6px 0}
+.share{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border:1px solid var(--hair);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.box label{font:400 10.5px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.copy{display:flex;border:1px solid var(--ink)}
+.copy input{flex:1;min-width:0;border:0;background:none;padding:9px 10px;font:400 12px var(--mono);color:var(--ink);outline:none}
+.copy button{border-left:1px solid var(--ink);padding:0 14px;font:500 10.5px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.copy button:hover{background:var(--ink);color:var(--bg)}
+.guest{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font:400 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+.guest button{border:1px solid var(--down);color:var(--down);padding:7px 12px;font:500 10.5px var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.guest button:hover{background:var(--down);color:#fff}
+footer{padding:28px 0 40px;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.missing{padding:90px 0;text-align:center}
+.missing h1{margin:0 auto 14px}
+.missing p{color:var(--dim);max-width:46ch;margin:0 auto 24px;line-height:1.5}
+.missing a{display:inline-block;border:1px solid var(--ink);padding:10px 16px;font:500 11px var(--mono);text-transform:uppercase;text-decoration:none}
+.skel{opacity:.35}
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr;gap:20px}
+  .face{width:120px;height:120px;border-radius:24px;padding:9px;order:-1}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .stat dd{font-size:20px}
+  .stat:nth-child(4){padding-left:0;border-left:0}
+  .stat:nth-child(n+4){border-top:1px solid var(--hair)}
+  .share{grid-template-columns:1fr}
+  .incs li{grid-template-columns:20px 1fr 1fr;}
+  .incs .err{grid-column:2/-1}
+  header.top .sep,header.top .crumb{display:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="VIGÍA, inicio">
+      <svg viewBox="0 0 27 27" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2ee6a6"/><stop offset=".5" stop-color="#20c3ff"/><stop offset="1" stop-color="#4f7cff"/></linearGradient></defs><path d="M23.5 8.5V8A4.5 4.5 0 0 0 19 3.5H8A4.5 4.5 0 0 0 3.5 8v11A4.5 4.5 0 0 0 8 23.5h11a4.5 4.5 0 0 0 4.5-4.5v-.5" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="10.5" cy="13.5" r="1.7" fill="#141414"/><circle cx="16" cy="13" r="1.7" fill="#141414"/></svg>
+      VIGÍA
+    </a>
+    <span class="sep mono">/</span><span class="crumb mono" style="font-size:11px">Página de estado</span>
+    <a class="back mono" href="/#probar">Crear mi monitor ↗</a>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="hero skel">
+    <div>
+      <div class="kicker mono"><span>Cargando…</span></div>
+      <h1>—</h1>
+    </div>
+    <div class="face"><canvas width="256" height="256"></canvas></div>
+  </div>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad2 = n => String(n).padStart(2, '0');
+const id = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop() || '');
+const VERDICT = { up: 'Todo funciona', degraded: 'Funciona, pero lento o inestable', down: 'Servicio caído', unknown: 'Esperando el primer chequeo' };
+const STATUS = { up: 'Operativo', degraded: 'Degradado', down: 'Caído', unknown: 'Sin datos' };
+const fmtMs = v => (v == null ? '—' : Math.round(v) + ' ms');
+const fmtUp = v => (v == null ? '—' : (v >= 99.995 ? '100' : v.toFixed(2)) + '%');
+function fmtDur(s) {
+  if (s == null) return 'en curso';
+  if (s < 60) return s + ' s';
+  if (s < 3600) return Math.round(s / 60) + ' min';
+  return (s / 3600).toFixed(1) + ' h';
+}
+const fmtTime = t => { const d = new Date(t); return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; };
+let data = null, built = false;
+
+/* ---------- cara del robot (2D) ---------- */
+let faceCtx = null, blinkAt = -9;
+function drawFace(t) {
+  requestAnimationFrame(drawFace);
+  if (!faceCtx) return;
+  const x = faceCtx, st = data?.status || 'unknown', s = 256;
+  x.fillStyle = '#000'; x.fillRect(0, 0, s, s);
+  const now = t / 1000;
+  if (now - blinkAt > 3 + Math.random() * 3) blinkAt = now;
+  const bt = (now - blinkAt) / .18, bs = bt >= 0 && bt < 1 ? 1 - .9 * Math.sin(bt * Math.PI) : 1;
+  x.shadowBlur = 14;
+  if (st === 'down') {
+    const p = .5 + .5 * Math.sin(now * 8);
+    x.shadowColor = '#ff3d5a'; x.shadowBlur = 10 + 12 * p; x.fillStyle = '#ff5a64';
+    x.beginPath(); x.roundRect(113, 50, 30, 104, 15); x.fill();
+    x.beginPath(); x.arc(128, 190, 17, 0, Math.PI * 2); x.fill();
+    return;
+  }
+  const col = st === 'degraded' ? '#ffd27a' : '#eafff8';
+  x.shadowColor = st === 'degraded' ? '#ffb347' : '#5ff5c8'; x.fillStyle = col;
+  for (const [cx, cy] of [[98, 131], [158, 126]]) {
+    x.save();
+    if (st === 'degraded') { x.beginPath(); x.rect(0, cy - 3, s, s); x.clip(); }
+    x.beginPath(); x.ellipse(cx, cy, 15, 19 * bs, 0, 0, Math.PI * 2); x.fill();
+    x.restore();
+  }
+}
+requestAnimationFrame(drawFace);
+
+/* ---------- gráfica de latencia con tooltip ---------- */
+function drawChart() {
+  const c = $('#chart'); if (!c || !data) return;
+  const dpr = Math.min(devicePixelRatio, 2), w = c.clientWidth, h = c.clientHeight;
+  c.width = w * dpr; c.height = h * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr);
+  const H = data.history, n = H.length;
+  if (n < 2) { x.font = '12px IBM Plex Mono'; x.fillStyle = 'rgba(20,20,20,.5)'; x.fillText('Reuniendo datos…', 0, 20); return; }
+  const oks = H.filter(k => k.ok).map(k => k.ms);
+  const max = Math.max(200, ...oks, data.slow_ms * .6) * 1.15;
+  const L = 44, X = i => L + (i / (n - 1)) * (w - L - 6), Y = ms => h - 18 - (ms / max) * (h - 30);
+  x.font = '10px IBM Plex Mono'; x.fillStyle = 'rgba(20,20,20,.5)'; x.strokeStyle = 'rgba(20,20,20,.09)'; x.lineWidth = 1;
+  for (const v of [0, max / 2, max]) {
+    const y = Y(v); x.beginPath(); x.moveTo(L, y); x.lineTo(w, y); x.stroke();
+    x.fillText(Math.round(v) + 'ms', 0, y + 3);
+  }
+  if (data.slow_ms < max) {
+    x.strokeStyle = 'rgba(232,137,12,.6)'; x.setLineDash([3, 3]);
+    x.beginPath(); x.moveTo(L, Y(data.slow_ms)); x.lineTo(w, Y(data.slow_ms)); x.stroke(); x.setLineDash([]);
+  }
+  H.forEach((k, i) => { if (!k.ok) { x.fillStyle = 'rgba(229,56,59,.18)'; x.fillRect(X(i) - 2, 6, 4, h - 24); } });
+  const g = x.createLinearGradient(0, 0, w, 0);
+  g.addColorStop(0, '#2ee6a6'); g.addColorStop(.5, '#20c3ff'); g.addColorStop(1, '#4f7cff');
+  x.beginPath(); let on = false;
+  H.forEach((k, i) => { if (!k.ok) { on = false; return; } on ? x.lineTo(X(i), Y(k.ms)) : (x.moveTo(X(i), Y(k.ms)), on = true); });
+  x.strokeStyle = g; x.lineWidth = 2; x.lineJoin = 'round'; x.stroke();
+  x.fillStyle = 'rgba(20,20,20,.5)';
+  x.fillText(fmtTime(H[0].t).slice(6), L, h - 2);
+  const end = fmtTime(H[n - 1].t).slice(6); x.fillText(end, w - x.measureText(end).width, h - 2);
+  c._geo = { X, Y, n, L, w };
+}
+function hookChart() {
+  const c = $('#chart'), tip = $('.tip');
+  c.addEventListener('mousemove', e => {
+    if (!c._geo || !data) return;
+    const r = c.getBoundingClientRect(), { n, L, w } = c._geo;
+    const i = Math.max(0, Math.min(n - 1, Math.round((e.clientX - r.left - L) / (w - L - 6) * (n - 1))));
+    const k = data.history[i];
+    tip.textContent = `${fmtTime(k.t).slice(6)} · ${k.ok ? fmtMs(k.ms) : 'fallo'}`;
+    tip.style.left = c._geo.X(i) + 'px';
+    tip.style.top = (k.ok ? c._geo.Y(k.ms) : r.height - 24) + 'px';
+    tip.style.opacity = 1;
+  });
+  c.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+}
+
+/* ---------- render ---------- */
+function shell() {
+  const share = `${location.origin}/s/${encodeURIComponent(id)}`;
+  const badge = `${location.origin}/badge/${encodeURIComponent(id)}.svg`;
+  $('#app').innerHTML = `
+    <div class="hero">
+      <div>
+        <div class="kicker mono" id="kicker"></div>
+        <h1 id="name"></h1>
+        <div class="url" id="url"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="face" id="face"><canvas width="256" height="256" aria-hidden="true"></canvas></div>
+    </div>
+    <dl class="stats">
+      <div class="stat"><dt>Uptime</dt><dd id="s-up">—</dd></div>
+      <div class="stat"><dt>Latencia p50</dt><dd id="s-p50">—</dd></div>
+      <div class="stat"><dt>Latencia p95</dt><dd id="s-p95">—</dd></div>
+      <div class="stat"><dt>Incidentes</dt><dd id="s-inc">—</dd></div>
+      <div class="stat"><dt>MTTR</dt><dd id="s-mttr">—</dd></div>
+      <div class="stat"><dt>Último chequeo</dt><dd id="s-ago">—</dd></div>
+    </dl>
+    <section class="blk">
+      <h2>Tiempo de respuesta <small id="chart-note"></small></h2>
+      <div class="chart"><canvas id="chart" aria-label="Gráfica de latencia"></canvas><div class="tip"></div></div>
+    </section>
+    <section class="blk">
+      <h2>Chequeos recientes <small id="strip-note"></small></h2>
+      <div class="strip" id="strip"></div>
+      <div class="legend"><span id="strip-from"></span><span>Verde: ok · Ámbar: lento · Rojo: fallo</span><span>Ahora</span></div>
+    </section>
+    <section class="blk">
+      <h2>Incidentes <small>Regla 2 de 3</small></h2>
+      <ul class="incs" id="incs"></ul>
+    </section>
+    <section class="blk">
+      <h2>Compartir</h2>
+      <div class="share">
+        <div class="box"><label for="c-link">Enlace a esta página</label>
+          <div class="copy"><input id="c-link" readonly value="${esc(share)}"><button data-copy="c-link">Copiar</button></div></div>
+        <div class="box"><label for="c-badge">Insignia para tu README <img src="${esc(badge)}" alt="" height="20" style="vertical-align:middle;margin-left:8px" id="badge-img"></label>
+          <div class="copy"><input id="c-badge" readonly value="${esc(`[![uptime](${badge})](${share})`)}"><button data-copy="c-badge">Copiar</button></div></div>
+      </div>
+    </section>
+    <section class="blk" id="guest" hidden><div class="guest"><span id="expires"></span><button id="del" hidden>Eliminar monitor</button></div></section>
+    <footer><span>Vigilado por VIGÍA · actualización automática cada 10 s</span><a href="/">Conoce el proyecto ↗</a></footer>`;
+  faceCtx = $('#face canvas').getContext('2d');
+  hookChart();
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+    const inp = $('#' + b.dataset.copy);
+    try { await navigator.clipboard.writeText(inp.value); } catch { inp.select(); document.execCommand('copy'); }
+    b.textContent = '¡Copiado!'; setTimeout(() => { b.textContent = 'Copiar'; }, 1600);
+  });
+  const mine = JSON.parse(localStorage.getItem('vigia.monitors') || '[]').find(m => m.id === id);
+  if (mine) {
+    $('#del').hidden = false;
+    $('#del').onclick = async () => {
+      if (!confirm('¿Eliminar este monitor? Se borrará su historial.')) return;
+      const r = await fetch(`/api/monitors/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'x-monitor-token': mine.token } });
+      if (r.ok || r.status === 404) {
+        try { localStorage.setItem('vigia.monitors', JSON.stringify(JSON.parse(localStorage.getItem('vigia.monitors') || '[]').filter(m => m.id !== id))); } catch {}
+        location.href = '/#probar';
+      }
+    };
+  }
+  built = true;
+}
+function render() {
+  if (!built) shell();
+  const d = data, st = d.status;
+  document.title = `${d.name} · ${STATUS[st]} · VIGÍA`;
+  $('#kicker').innerHTML = `<span class="dot ${st}"></span><span>${STATUS[st]}</span><span>·</span><span>${d.kind === 'guest' ? 'Monitor de visitante' : 'Servicio destacado'}</span><span>·</span><span>cada ${Math.round(d.interval)} s</span>`;
+  $('#name').textContent = d.name;
+  $('#url').innerHTML = `<a href="${esc(d.url)}" target="_blank" rel="noopener nofollow">${esc(d.url)}</a>`;
+  $('#verdict').innerHTML = `<span class="dot ${st}"></span>${VERDICT[st]}`;
+  $('#verdict').style.borderColor = st === 'down' ? 'var(--down)' : '';
+  $('#face').className = 'face ' + st;
+  $('#s-up').textContent = fmtUp(d.uptime);
+  $('#s-p50').textContent = fmtMs(d.p50);
+  $('#s-p95').textContent = fmtMs(d.p95);
+  $('#s-inc').textContent = d.incident_count;
+  $('#s-mttr').textContent = d.mttr_s == null ? '—' : fmtDur(d.mttr_s);
+  $('#chart-note').textContent = `últimos ${d.history.length} chequeos`;
+  const strip = d.history.slice(-90);
+  // 90 casillas fijas, como las páginas de estado profesionales; las vacías quedan grises
+  $('#strip').innerHTML = '<i class="e"></i>'.repeat(90 - strip.length) + strip.map(k => `<i class="${!k.ok ? 'f' : k.ms > d.slow_ms ? 's' : ''}" title="${fmtTime(k.t)} · ${k.ok ? fmtMs(k.ms) : 'fallo'}"></i>`).join('');
+  $('#strip-note').textContent = `${strip.length} más recientes`;
+  $('#strip-from').textContent = strip.length ? fmtTime(strip[0].t) : '';
+  $('#incs').innerHTML = d.incidents.length
+    ? d.incidents.map(i => `<li><span class="dot ${i.end ? 'up' : 'down'}"></span><span class="when">${fmtTime(i.start)}</span><span class="dur">${i.end ? 'duró ' + fmtDur(i.duration_s) : 'en curso'}</span><span class="err" title="${esc(i.error)}">${esc(i.error || '—')}</span></li>`).join('')
+    : `<li class="empty">Sin incidentes en los últimos ${d.checks} chequeos ✓</li>`;
+  if (d.kind === 'guest') {
+    $('#guest').hidden = false;
+    const hrs = Math.max(0, (d.expires - Date.now()) / 3600000);
+    $('#expires').textContent = `Este monitor de prueba se elimina solo en ${hrs >= 1 ? Math.floor(hrs) + ' h' : Math.ceil(hrs * 60) + ' min'}`;
+  }
+  $('#badge-img').src = `/badge/${encodeURIComponent(id)}.svg?t=${Date.now()}`;
+  renderAgo();
+  drawChart();
+}
+function renderAgo() {
+  const el = $('#s-ago'); if (!el || !data) return;
+  el.textContent = data.last ? Math.max(0, Math.round((Date.now() - data.last.t) / 1000)) + ' s' : '—';
+}
+function missing(msg) {
+  document.title = 'Monitor no encontrado · VIGÍA';
+  $('#app').innerHTML = `<div class="missing"><h1>Este monitor no existe</h1><p>${esc(msg)}</p><a href="/#probar">Crear uno nuevo ↗</a></div>`;
+}
+async function load() {
+  try {
+    const r = await fetch(`/api/status/${encodeURIComponent(id)}`, { cache: 'no-store' });
+    if (r.status === 404) return missing('Puede que el enlace esté mal escrito o que el monitor de prueba ya haya expirado (duran 24 horas).');
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+    render();
+  } catch {
+    if (!built) missing('No se pudo contactar al servidor de VIGÍA. Intenta de nuevo en unos segundos.');
+  }
+}
+load();
+setInterval(load, 10000);
+setInterval(renderAgo, 1000);
+addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
