@@ -1,5 +1,12 @@
 # VIGÍA · Monitoreo de sistemas
 
+[![CI](https://github.com/saracastrillons/vigia/actions/workflows/ci.yml/badge.svg)](https://github.com/saracastrillons/vigia/actions/workflows/ci.yml)
+[![VIGÍA uptime](https://vigia-qp2b.onrender.com/badge/vigia.svg)](https://vigia-qp2b.onrender.com/s/vigia)
+
+### 🔴 Demo en vivo: **[vigia-qp2b.onrender.com](https://vigia-qp2b.onrender.com)**
+
+> Corre en el plan gratuito de Render: si nadie la visitó en los últimos 15 minutos, la primera carga tarda unos 50 segundos en despertar.
+
 Monitor de servicios **autoalojado**: hace *health checks* HTTP concurrentes, guarda cada resultado como serie de tiempo, decide el estado con la **regla 2 de 3** y transmite cada evento por **WebSocket** a un robot 3D que reacciona en vivo al estado real de tus sistemas.
 
 ![Intro](docs/intro.png)
